@@ -137,13 +137,35 @@ app_license = "mit"
 # ---------------
 # Hook on document methods and events
 
-# doc_events = {
-# 	"*": {
-# 		"on_update": "method",
-# 		"on_cancel": "method",
-# 		"on_trash": "method"
-# 	}
-# }
+doc_events = {
+    "Item": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Customer": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Supplier": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Stock Entry": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Price List": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Item Price": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Serial No": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Batch": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+    "Delivery Note": {
+        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    },
+}
 
 # Scheduled Tasks
 # ---------------
@@ -241,4 +263,3 @@ app_license = "mit"
 # default_log_clearing_doctypes = {
 # 	"Logging DocType Name": 30  # days to retain logs
 # }
-
