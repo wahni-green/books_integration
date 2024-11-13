@@ -1,0 +1,64 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-11-13 16:26:55.566863",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "doctype_name",
+  "column_break_mozr",
+  "name_in_erpnext",
+  "name_in_fbooks"
+ ],
+ "fields": [
+  {
+   "fieldname": "doctype_name",
+   "fieldtype": "Select",
+   "label": "Doctype",
+   "options": "Item\nCustomer\nSupplier\nSales Invoice\nPayment Entry\nStock Entry\nPrice List\nItem Price\nSerial No\nBatch\nUOM\nDelivery Note"
+  },
+  {
+   "fieldname": "column_break_mozr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "name_in_erpnext",
+   "fieldtype": "Dynamic Link",
+   "in_list_view": 1,
+   "label": "Name in ERPNext",
+   "options": "doctype_name",
+   "reqd": 1
+  },
+  {
+   "fieldname": "name_in_fbooks",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name in FBooks",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-11-13 16:32:51.758585",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Books ERPN Doc Name",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
