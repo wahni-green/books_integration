@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-11-13 10:11:47.311512",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "erpn_tax_template",
+  "column_break_qlru",
+  "fbooks_tax_template"
+ ],
+ "fields": [
+  {
+   "fieldname": "erpn_tax_template",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "ERPN Tax Template",
+   "options": "Item Tax Template"
+  },
+  {
+   "fieldname": "column_break_qlru",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "fbooks_tax_template",
+   "fieldtype": "Data",
+   "label": "FBooks Tax Template"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-11-13 10:16:40.918045",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Item Tax Template Map",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
