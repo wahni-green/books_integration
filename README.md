@@ -1,10 +1,7 @@
 ## **Books Integration**
 
-<<<<<<< HEAD
-=======
 _📢 Undergoing Alpha Testing. Please open an issue if you encounter any bugs._
 
->>>>>>> 955e954 (docs: adde configuration and installation guides)
 Frappe Books Integration for ERPNext
 
 ## Installation
