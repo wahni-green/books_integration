@@ -63,6 +63,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "30000",
    "fieldname": "sync_interval",
    "fieldtype": "Int",
    "label": "Sync Interval"
@@ -291,7 +292,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-13 10:44:39.989560",
+ "modified": "2024-11-27 15:36:20.186921",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
