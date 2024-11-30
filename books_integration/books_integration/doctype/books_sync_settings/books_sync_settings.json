@@ -17,7 +17,7 @@
   "customer_tab",
   "sync_customer",
   "column_break_ynxb",
-  "sync_type",
+  "customer_sync_type",
   "supplier_tab",
   "sync_supplier",
   "column_break_brka",
@@ -113,12 +113,6 @@
   {
    "fieldname": "column_break_ynxb",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
   },
   {
    "fieldname": "supplier_tab",
@@ -287,12 +281,18 @@
    "fieldtype": "Select",
    "label": "Sync Type",
    "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
+  },
+  {
+   "fieldname": "customer_sync_type",
+   "fieldtype": "Select",
+   "label": "Sync Type",
+   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-27 15:36:20.186921",
+ "modified": "2024-11-30 15:43:48.139594",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
