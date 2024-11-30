@@ -24,7 +24,6 @@ class DocConverterBase:
         self.is_dict = isinstance(dirty_doc, dict)
 
     def _convert_doc(self):
-
         if not self.field_map:
             return None
 
@@ -314,7 +313,7 @@ class Customer(DocConverterBase):
             "name": "name",
             "gstin": "gstin",
             "gst_category": "gstType",
-            "address": "customer_primary_address",
+            "customer_primary_address": "address",
         }
 
     def _fill_missing_values_for_erpn(self):
