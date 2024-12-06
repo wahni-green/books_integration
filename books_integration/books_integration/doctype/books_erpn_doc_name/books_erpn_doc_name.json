@@ -15,7 +15,7 @@
    "fieldname": "doctype_name",
    "fieldtype": "Select",
    "label": "Doctype",
-   "options": "Item\nCustomer\nSupplier\nSales Invoice\nPayment Entry\nStock Entry\nPrice List\nItem Price\nSerial No\nBatch\nUOM\nDelivery Note"
+   "options": "Item\nCustomer\nSupplier\nSales Invoice\nPayment Entry\nStock Entry\nPrice List\nItem Price\nSerial No\nBatch\nUOM\nDelivery Note\nAddress"
   },
   {
    "fieldname": "column_break_mozr",
@@ -39,7 +39,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-11-13 16:32:51.758585",
+ "modified": "2024-11-30 16:43:29.906346",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books ERPN Doc Name",
