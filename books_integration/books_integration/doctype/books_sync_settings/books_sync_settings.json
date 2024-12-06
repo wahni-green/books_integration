@@ -31,7 +31,7 @@
   "column_break_gfme",
   "sales_payment_sync_type",
   "stock_tab",
-  "sync_stock",
+  "sync_stock_entry",
   "column_break_zsky",
   "stock_sync_type",
   "price_list_tab",
@@ -183,12 +183,6 @@
    "label": "Stock"
   },
   {
-   "default": "0",
-   "fieldname": "sync_stock",
-   "fieldtype": "Check",
-   "label": "Sync Stock Entry"
-  },
-  {
    "fieldname": "column_break_zsky",
    "fieldtype": "Column Break"
   },
@@ -287,12 +281,18 @@
    "fieldtype": "Select",
    "label": "Sync Type",
    "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
+  },
+  {
+   "default": "0",
+   "fieldname": "sync_stock_entry",
+   "fieldtype": "Check",
+   "label": "Sync Stock Entry"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-11-30 15:43:48.139594",
+ "modified": "2024-12-03 16:46:30.976373",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
