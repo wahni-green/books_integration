@@ -224,7 +224,7 @@ class Item(DocConverterBase):
         }
 
     def get_item_tax_template(self, name: str, target: str):
-        sync_settings = frappe.get_doc("FBooks Sync Settings", {"enable_sync": 1})
+        sync_settings = frappe.get_doc("Books Sync Settings", {"enable_sync": 1})
         item_tax_templates = sync_settings.get("item_tax_template_map")
         templates_map = dict()
 
@@ -318,6 +318,14 @@ class Customer(DocConverterBase):
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["customer_name"] = self._dirty_doc.get("name")
+        address_name = frappe.db.get_value(
+            "Books ERPN Doc Name",
+            {
+                "doctype_name": "Address",
+                "name_in_fbooks": self.converted_doc["customer_primary_address"],
+            },["name_in_erpnext"]
+        )
+        self.converted_doc["customer_primary_address"]= address_name
 
     def _fill_missing_values_for_fbooks(self):
         self.converted_doc["role"] = "Customer"
@@ -327,11 +335,24 @@ class Supplier(DocConverterBase):
     def __init__(self, dirty_doc, target):
         super().__init__(dirty_doc, target)
 
-        self.field_map = {"name": "name", "gstin": "gstin", "gst_category": "gstType"}
+        self.field_map = {
+            "name": "name",
+            "gstin": "gstin",
+            "gst_category": "gstType",
+            "supplier_primary_address": "address",
+        }
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["supplier_name"] = self._dirty_doc.get("name")
 
+        address_name = frappe.db.get_value(
+            "Books ERPN Doc Name",
+            {
+                "doctype_name": "Address",
+                "name_in_fbooks": self.converted_doc["supplier_primary_address"],
+            },["name_in_erpnext"]
+        )
+        self.converted_doc["supplier_primary_address"]= address_name
     def _fill_missing_values_for_fbooks(self):
         self.converted_doc["role"] = "Supplier"
 
@@ -402,7 +423,6 @@ class SalesInvoice(DocConverterBase):
 
                 item["discount_amount"] = discount_amount
                 item["rate"] = flt(item["amount"]) - discount_amount
-
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
@@ -514,7 +534,7 @@ class StockEntry(DocConverterBase):
             ],
         }
 
-    def fill_missing_values_for_erpn(self):
+    def _fill_missing_values_for_erpn(self):
         if "Material" in self.converted_doc["stock_entry_type"]:
             entry_type = self.converted_doc["stock_entry_type"].split("Material")[1]
             self.converted_doc["stock_entry_type"] = "Material {}".format(entry_type)
@@ -724,3 +744,6 @@ class Address(DocConverterBase):
             "country": "country",
             "pincode": "postalCode",
         }
+
+    def _fill_missing_values_for_erpn(self):
+        self.converted_doc["address_title"] = self.converted_doc.get("name")
