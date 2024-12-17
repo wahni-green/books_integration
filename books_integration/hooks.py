@@ -170,23 +170,11 @@ doc_events = {
 # Scheduled Tasks
 # ---------------
 
-# scheduler_events = {
-# 	"all": [
-# 		"books_integration.tasks.all"
-# 	],
-# 	"daily": [
-# 		"books_integration.tasks.daily"
-# 	],
-# 	"hourly": [
-# 		"books_integration.tasks.hourly"
-# 	],
-# 	"weekly": [
-# 		"books_integration.tasks.weekly"
-# 	],
-# 	"monthly": [
-# 		"books_integration.tasks.monthly"
-# 	],
-# }
+scheduler_events = {
+	"hourly": [
+		"books_integration.scheduler.enqueue_process_transactions"
+	],
+}
 
 # Testing
 # -------

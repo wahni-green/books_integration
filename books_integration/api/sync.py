@@ -4,7 +4,7 @@
 import frappe
 from frappe.utils import create_batch
 from books_integration.doc_converter import DocConverter
-from books_integration.utils import get_doctype_name, save_document_name, pretty_json
+from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
 
 
 @frappe.whitelist(methods=["GET"])
@@ -101,6 +101,8 @@ def sync_transactions(instance, transaction_type, records):
         "books_integration.scheduler.process_transactions",
         queue="long",
         enqueue_after_commit=True,
+        job_id="BOOKS_SYNC_TRANSACTION_JOB",
+        deduplicate=True
     )
 
     return {
@@ -117,7 +119,7 @@ def update_status(instance, data):
         "books_name": data.get("nameInFBooks"),
     }
 
-    save_document_name(instance, ref_data)
+    update_books_reference(instance, ref_data)
     try:
         frappe.get_doc("Books Sync Queue", data.get("sync_id")).delete()
     except Exception:

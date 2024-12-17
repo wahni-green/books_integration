@@ -18,7 +18,7 @@ def get_doctype_name(doctype: str, target, doc=None):
         return list(doctype_map.values())[doctype_name_idx]
 
 
-def save_document_name(instance, reference):
+def update_books_reference(instance, reference):
     doctype = get_doctype_name(
         reference.get("doctype"), "erpn"
     )
