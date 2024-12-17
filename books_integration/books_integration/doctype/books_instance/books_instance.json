@@ -1,0 +1,68 @@
+{
+ "actions": [],
+ "autoname": "field:device_id",
+ "creation": "2024-12-17 15:36:51.978240",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "enabled",
+  "section_break_gejx",
+  "device_id",
+  "column_break_didr",
+  "last_synced_on"
+ ],
+ "fields": [
+  {
+   "default": "0",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "label": "Enabled"
+  },
+  {
+   "fieldname": "section_break_gejx",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "device_id",
+   "fieldtype": "Data",
+   "label": "Device ID",
+   "read_only": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "column_break_didr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "last_synced_on",
+   "fieldtype": "Datetime",
+   "label": "Last Synced On",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-17 15:41:03.912683",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Books Instance",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

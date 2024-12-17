@@ -1,7 +1,7 @@
 [project]
 name = "books_integration"
 authors = [
-    { name = "Akshay", email = "akshay@wahni.com"}
+    { name = "Wahni IT Solutions", email = "akshay@wahni.com"}
 ]
 description = "Frappe Books Integration for ERPNext"
 requires-python = ">=3.10"

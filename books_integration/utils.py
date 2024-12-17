@@ -18,27 +18,43 @@ def get_doctype_name(doctype: str, target, doc=None):
         return list(doctype_map.values())[doctype_name_idx]
 
 
-def save_document_name(doctype: str, erpn_filename=str, fbooks_filename=str):
-    doc_exists = frappe.db.exists(
+def save_document_name(instance, reference):
+    doctype = get_doctype_name(
+        reference.get("doctype"), "erpn"
+    )
+    existing_ref = frappe.db.get_value(
         {
-            "doctype": "Books ERPN Doc Name",
-            "doctype_name": get_doctype_name(doctype, "erpn"),
-            "name_in_erpnext": erpn_filename,
-            "name_in_fbooks": fbooks_filename,
-        }
+            "doctype": "Books Reference",
+            "document_type": doctype,
+            "document_name": reference.get("name"),
+            "instance": instance,
+        },
+        ["books_name", "name"],
+        as_dict=True,
     )
 
-    if doc_exists:
+    if not existing_ref:
+        frappe.get_doc(
+            {
+                "doctype": "Books Reference",
+                "document_type": doctype,
+                "document_name": reference.get("name"),
+                "instance": instance,
+                "books_name": reference.get("books_name"),
+            },
+        ).insert()
         return
 
-    frappe.get_doc(
-        {
-            "doctype": "Books ERPN Doc Name",
-            "doctype_name": get_doctype_name(doctype, "erpn"),
-            "name_in_erpnext": erpn_filename,
-            "name_in_fbooks": fbooks_filename,
-        }
-    ).insert()
+    if existing_ref.books_name == reference.get("books_name"):
+        return
+
+    if existing_ref.books_name != reference.get("books_name"):
+        frappe.db.set_value(
+            "Books Reference", existing_ref.name, "books_name", reference.get("books_name")
+        )
+
+    return
+
 
 
 doctype_map = {
@@ -65,3 +81,13 @@ def convert_date_for_frappe(input_date):
     output_str = input_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
     return output_str
+
+
+def pretty_json(obj):
+    if not obj:
+        return ""
+
+    if isinstance(obj, str):
+        return obj
+
+    return frappe.as_json(obj, indent=4)

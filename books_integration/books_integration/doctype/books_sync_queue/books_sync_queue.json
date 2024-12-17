@@ -5,19 +5,12 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "doctype_name",
+  "document_type",
   "column_break_ctpv",
-  "document_name"
+  "document_name",
+  "books_instance"
  ],
  "fields": [
-  {
-   "fieldname": "doctype_name",
-   "fieldtype": "Select",
-   "in_list_view": 1,
-   "label": "Doctype",
-   "options": "Item\nCustomer\nSupplier\nSales Invoice\nPayment Entry\nStock Entry\nPrice List\nItem Price\nSerial No\nBatch\nUOM\nAddress",
-   "reqd": 1
-  },
   {
    "fieldname": "column_break_ctpv",
    "fieldtype": "Column Break"
@@ -27,16 +20,34 @@
    "fieldtype": "Dynamic Link",
    "in_list_view": 1,
    "label": "Document Name",
-   "options": "doctype_name",
+   "options": "document_type",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "options": "DocType",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "books_instance",
+   "fieldtype": "Link",
+   "label": "Books Instance",
+   "options": "Books Instance",
+   "read_only": 1,
    "reqd": 1
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-11-13 14:25:41.278808",
+ "modified": "2024-12-17 15:44:29.122301",
  "modified_by": "Administrator",
  "module": "Books Integration",
- "name": "Sync Queue",
+ "name": "Books Sync Queue",
  "owner": "Administrator",
  "permissions": [
   {

@@ -7,7 +7,7 @@ def add_doc_to_sync_queue(doc, method):
 
     is_exists_in_queue = frappe.db.exists(
         {
-            "doctype": "Sync Queue",
+            "doctype": "Books Sync Queue",
             "document_name": doc.name,
             "doctype_name": doc.doctype,
         }
@@ -15,7 +15,7 @@ def add_doc_to_sync_queue(doc, method):
     if not is_exists_in_queue:
         frappe.get_doc(
             {
-                "doctype": "Sync Queue",
+                "doctype": "Books Sync Queue",
                 "document_name": doc.name,
                 "doctype_name": doc.doctype,
             }

@@ -5,5 +5,5 @@
 from frappe.tests.utils import FrappeTestCase
 
 
-class TestBooksSyncSettings(FrappeTestCase):
+class TestBooksReference(FrappeTestCase):
 	pass

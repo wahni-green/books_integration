@@ -1,3 +1,6 @@
+# Copyright (c) 2024, Wahni IT Solutions and contributors
+# For license information, please see license.txt
+
 import frappe
 from frappe.utils import flt
 from fb_int.utils import get_doctype_name, convert_date_for_frappe
@@ -319,7 +322,7 @@ class Customer(DocConverterBase):
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["customer_name"] = self._dirty_doc.get("name")
         address_name = frappe.db.get_value(
-            "Books ERPN Doc Name",
+            "Books Reference",
             {
                 "doctype_name": "Address",
                 "name_in_fbooks": self.converted_doc["customer_primary_address"],
@@ -346,7 +349,7 @@ class Supplier(DocConverterBase):
         self.converted_doc["supplier_name"] = self._dirty_doc.get("name")
 
         address_name = frappe.db.get_value(
-            "Books ERPN Doc Name",
+            "Books Reference",
             {
                 "doctype_name": "Address",
                 "name_in_fbooks": self.converted_doc["supplier_primary_address"],
@@ -487,7 +490,7 @@ class PaymentEntry(DocConverterBase):
 
         for row in self.converted_doc["references"]:
             reference_name_in_erpn = frappe.db.get_value(
-                "Books ERPN Doc Name",
+                "Books Reference",
                 {"name_in_fbooks": row["reference_name"]},
                 "name_in_erpnext",
             )
@@ -685,7 +688,7 @@ class DeliveryNote(DocConverterBase):
             for row in self.converted_doc["items"]:
                 try:
                     reference_name_in_erpn = frappe.db.get_value(
-                        "Books ERPN Doc Name",
+                        "Books Reference",
                         {"name_in_fbooks": self.doc_dict.get("backReference")},
                         "name_in_erpnext",
                     )
@@ -716,7 +719,7 @@ class DeliveryNote(DocConverterBase):
             self.doc_can_save = True
 
         ref_doc_name_in_erpnext = frappe.db.get_value(
-            "Books ERPN Doc Name", {"name_in_fbooks": ref_doc_name}, "name"
+            "Books Reference", {"name_in_fbooks": ref_doc_name}, "name"
         )
 
         if not ref_doc_name_in_erpnext:

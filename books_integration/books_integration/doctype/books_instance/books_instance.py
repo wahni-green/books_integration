@@ -1,9 +1,9 @@
-# Copyright (c) 2024, Akshay and contributors
+# Copyright (c) 2024, Wahni IT Solutions and contributors
 # For license information, please see license.txt
 
 # import frappe
 from frappe.model.document import Document
 
 
-class BooksERPNDocName(Document):
+class BooksInstance(Document):
 	pass

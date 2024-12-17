@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-17 16:57:57.506682",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "books_instance",
+  "column_break_fqdj",
+  "document_type",
+  "sync_time",
+  "section_break_dalh",
+  "data"
+ ],
+ "fields": [
+  {
+   "fieldname": "books_instance",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Books Instance",
+   "options": "Books Instance",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_fqdj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Now",
+   "fieldname": "sync_time",
+   "fieldtype": "Datetime",
+   "label": "Sync Time",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_dalh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "data",
+   "fieldtype": "JSON",
+   "label": "Data",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Link",
+   "label": "Document Type",
+   "options": "DocType",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2024-12-17 17:01:06.715896",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Books Integration Log",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}
