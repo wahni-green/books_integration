@@ -138,32 +138,12 @@ app_license = "mit"
 # Hook on document methods and events
 
 doc_events = {
-    "Item": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Customer": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Supplier": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Stock Entry": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Price List": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Item Price": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Serial No": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Batch": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
-    },
-    "Delivery Note": {
-        "on_update": "books_integration.books_integration.hooks.sync_queue.add_doc_to_sync_queue",
+    (
+        "Item", "Customer", "Supplier", 
+        "Stock Entry", "Price List", "Item Price",
+        "Serial No", "Batch", "Delivery Note"
+    ): {
+        "on_update": "books_integration.sync_queue.add_doc_to_sync_queue",
     },
 }
 
