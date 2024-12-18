@@ -95,12 +95,11 @@ def initiate_master_sync(instance, records):
 
 
 @frappe.whitelist(methods=["POST"])
-def sync_transactions(instance, transaction_type, records):
+def sync_transactions(instance, records):
     batches = create_batch(records, 15)
     for batch in batches:
         doc = frappe.new_doc("Books Integration Log")
         doc.books_instance = instance
-        doc.document_type = transaction_type
         doc.data = pretty_json(batch)
         doc.save(ignore_permissions=True)
 
