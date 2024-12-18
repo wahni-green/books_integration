@@ -3,7 +3,7 @@
 
 import frappe
 from books_integration.doc_converter import DocConverter
-from books_integration.utils import get_doctype_name, save_document_name
+from books_integration.utils import get_doctype_name, update_books_reference
 
 
 def enqueue_process_transactions():
@@ -64,7 +64,12 @@ def process_data(data, doctype):
     )
 
     if not ref_exists:
-        create_record(conv_doc)
+        create_record(
+            conv_doc,
+            data.get("name"),
+            data.get("submitted"),
+            data.get("cancelled")
+        )
         return
 
     _doc = frappe.get_doc(doctype, ref_exists)
@@ -96,4 +101,4 @@ def create_record(_doc, ref, submit, cancel):
     if cancel and doc.docstatus == 1:
         doc.cancel()
 
-    save_document_name(doc.doctype, doc.name, ref)
+    update_books_reference(doc.doctype, doc.name, ref)
