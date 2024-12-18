@@ -8,7 +8,6 @@
   "books_instance",
   "processed",
   "column_break_fqdj",
-  "document_type",
   "sync_time",
   "section_break_dalh",
   "data"
@@ -46,13 +45,6 @@
    "reqd": 1
   },
   {
-   "fieldname": "document_type",
-   "fieldtype": "Link",
-   "label": "Document Type",
-   "options": "DocType",
-   "reqd": 1
-  },
-  {
    "default": "0",
    "fieldname": "processed",
    "fieldtype": "Check",
@@ -62,7 +54,7 @@
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-17 17:54:41.085418",
+ "modified": "2024-12-18 09:16:17.402231",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Integration Log",

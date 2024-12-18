@@ -12,3 +12,19 @@ def sync_settings():
         "app_version": app_version,
         "data": frappe.get_cached_doc("Books Sync Settings")
     }
+
+
+@frappe.whitelist(methods=["POST"])
+def register_instance(instance):
+    if not instance:
+        return {"success": False, "message": "Instance name is required"}
+
+    if frappe.db.exists("Books Instance", instance):
+        return {"success": False, "message": "Instance already registered"}
+
+    frappe.get_doc({
+        "doctype": "Books Instance",
+        "device_id": instance
+    }).insert(ignore_permissions=True)
+
+    return {"success": True, "message": "Instance registered successfully"}

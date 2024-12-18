@@ -51,6 +51,8 @@ def process_transactions():
 
 def process_data(data, doctype):
     conv_doc = DocConverter(data, "erpn")
+    if not conv_doc:
+        return
 
     ref_exists = frappe.db.get_value(
         "Books Reference",

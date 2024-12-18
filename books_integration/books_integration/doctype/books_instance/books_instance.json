@@ -9,7 +9,7 @@
   "section_break_gejx",
   "device_id",
   "column_break_didr",
-  "last_synced_on"
+  "instance_name"
  ],
  "fields": [
   {
@@ -25,8 +25,11 @@
   {
    "fieldname": "device_id",
    "fieldtype": "Data",
+   "in_list_view": 1,
    "label": "Device ID",
+   "not_nullable": 1,
    "read_only": 1,
+   "reqd": 1,
    "unique": 1
   },
   {
@@ -34,15 +37,14 @@
    "fieldtype": "Column Break"
   },
   {
-   "fieldname": "last_synced_on",
-   "fieldtype": "Datetime",
-   "label": "Last Synced On",
-   "read_only": 1
+   "fieldname": "instance_name",
+   "fieldtype": "Data",
+   "label": "Instance Name"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-17 15:41:03.912683",
+ "modified": "2024-12-18 09:15:57.899020",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Instance",

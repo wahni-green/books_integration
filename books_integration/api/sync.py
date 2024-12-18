@@ -30,11 +30,14 @@ def get_pending_docs(instance):
             "books_name"
         )
         doc_converter_obj = DocConverter(doc, "fbooks")
+        if not doc_converter_obj:
+            continue
         compatable_doc = doc_converter_obj.get_converted_doc()
 
         if existing_books_ref:
             compatable_doc["fbooksDocName"] = existing_books_ref
 
+        compatable_doc["books_sync_id"] = queued_doc.name
         docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
@@ -121,7 +124,7 @@ def update_status(instance, data):
 
     update_books_reference(instance, ref_data)
     try:
-        frappe.get_doc("Books Sync Queue", data.get("sync_id")).delete()
+        frappe.get_doc("Books Sync Queue", data.get("books_sync_id")).delete()
     except Exception:
         frappe.log_error(
             title=f"Books Integration Error - {instance} - Update Status",

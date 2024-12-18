@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.utils import flt
-from fb_int.utils import get_doctype_name, convert_date_for_frappe
+from books_integration.utils import get_doctype_name, convert_date_for_frappe
 
 
 class DocConverterBase:
