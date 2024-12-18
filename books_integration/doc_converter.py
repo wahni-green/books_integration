@@ -25,7 +25,7 @@ class DocConverterBase:
         self.doc_can_save = True
         self.doc_can_submit = True
         self.is_dict = isinstance(dirty_doc, dict)
-        self.settings = frappe.get_cache_doc("Books Sync Settings")
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
 
         if self.target == "erpn":
             child_table = self.field_map.pop("child_tables", [])
