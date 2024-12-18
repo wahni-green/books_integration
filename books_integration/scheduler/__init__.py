@@ -2,6 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
+import json
 from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference
 
@@ -27,7 +28,8 @@ def process_transactions():
         return
 
     frappe.db.set_value("Books Integration Log", log.name, "processed", 1)
-    for record in log.data:
+    data = json.loads(log.data)
+    for record in data:
         try:
             doctype = get_doctype_name(record.get("doctype"), "erpn")
             process_data(log.books_instance, record, doctype)
