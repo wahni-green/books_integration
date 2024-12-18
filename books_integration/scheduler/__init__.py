@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
-from books_integration.doc_converter import DocConverter
+from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference
 
 
@@ -19,8 +19,9 @@ def enqueue_process_transactions():
 def process_transactions():
     log = frappe.db.get_value(
         "Books Integration Log",
-        filters={"processed": 0},
-        fields=["name", "data", "books_instance"]
+        {"processed": 0},
+        ["name", "data", "books_instance"],
+        as_dict=True
     )
     if not log:
         return
@@ -29,7 +30,7 @@ def process_transactions():
     for record in log.data:
         try:
             doctype = get_doctype_name(record.get("doctype"), "erpn")
-            process_data(record, doctype)
+            process_data(log.books_instance, record, doctype)
         except Exception:
             frappe.get_doc({
                 "doctype": "Books Error Log",
@@ -49,8 +50,8 @@ def process_transactions():
     )
 
 
-def process_data(data, doctype):
-    conv_doc = DocConverter(data, "erpn")
+def process_data(instance, data, doctype):
+    conv_doc = init_doc_converter(instance, data, "erpn")
     if not conv_doc:
         return
 

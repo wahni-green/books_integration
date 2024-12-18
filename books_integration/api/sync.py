@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.utils import create_batch
-from books_integration.doc_converter import DocConverter
+from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
 
 
@@ -12,7 +12,7 @@ def get_pending_docs(instance):
     queued_docs = frappe.db.get_all(
         "Books Sync Queue",
         filters={"books_instance": instance},
-        fields=["name", "document_type", "document_name"]
+        fields=["name", "document_type", "document_name", "books_instance"]
     )
 
     if not queued_docs:
@@ -20,7 +20,9 @@ def get_pending_docs(instance):
 
     docs = []
     for queued_doc in queued_docs:
-        doc = frappe.get_doc(queued_doc.document_type, queued_doc.document_name)
+        doc = frappe.get_doc(
+            queued_doc.document_type, queued_doc.document_name
+        )
         existing_books_ref = frappe.db.get_value(
             "Books Reference",
             {
@@ -29,7 +31,9 @@ def get_pending_docs(instance):
             },
             "books_name"
         )
-        doc_converter_obj = DocConverter(doc, "fbooks")
+        doc_converter_obj = init_doc_converter(
+            queued_doc.books_instance, doc, "fbooks"
+        )
         if not doc_converter_obj:
             continue
         compatable_doc = doc_converter_obj.get_converted_doc()

@@ -2,34 +2,42 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.utils import flt
-from books_integration.utils import get_doctype_name, convert_date_for_frappe
+from frappe.model.document import Document
+from frappe.utils import flt, getdate
+from books_integration.utils import get_doctype_name
 
 
 class DocConverterBase:
-    def __init__(self, dirty_doc, target: str) -> None:
-        if isinstance(dirty_doc, dict):
-            self.doc_dict = dirty_doc
-        else:
+    def __init__(self, instance, dirty_doc, target: str) -> None:
+        self.doc_dict = dirty_doc
+        if isinstance(self.doc_dict, Document):
             self.doc_dict = dirty_doc.as_dict()
 
-        self.field_map = dict()
-        self.converted_doc = dict()
+        self.instance = instance
+        self.field_map = self.field_map or {}
+        self.converted_doc = {}
         self._dirty_doc = dirty_doc
         self.target = target
         self.source_doctype = self._dirty_doc.get("doctype")
         self.target_doctype = get_doctype_name(
             self.source_doctype, self.target, self._dirty_doc
         )
-        self.frappe_doc = None
         self.doc_can_save = True
         self.doc_can_submit = True
         self.is_dict = isinstance(dirty_doc, dict)
+        self.settings = frappe.get_cache_doc("Books Sync Settings")
+
+        if self.target == "erpn":
+            child_table = self.field_map.pop("child_tables", [])
+            self.field_map = {v: k for k, v in self.field_map.items()}
+            self.field_map["child_tables"] = child_table
+
 
     def _convert_doc(self):
         if not self.field_map:
             return None
 
+        self.converted_doc = {}
         self.converted_doc["doctype"] = self.target_doctype
 
         for field in self.doc_dict:
@@ -40,80 +48,47 @@ class DocConverterBase:
 
             self.converted_doc[fieldname] = self.doc_dict.get(field)
 
-        if self.field_map.get("child_tables"):
-            for child_table in self.field_map.get("child_tables"):
+        for child_table in (self.field_map.get("child_tables") or []):
+            source_field = child_table.get("fbooks_fieldname")
+            target_field = child_table.get("erpn_fieldname")
 
-                if self.target == "erpn":
-                    source_table_fieldname = child_table.get("fbooks_fieldname")
-                    target_table_fieldname = child_table.get("erpn_fieldname")
-                    if not child_table.get("erpn_fieldname"):
-                        continue
-                else:
-                    source_table_fieldname = child_table.get("erpn_fieldname")
-                    target_table_fieldname = child_table.get("fbooks_fieldname")
-                    if not child_table.get("fbooks_fieldname"):
-                        continue
+            if self.target != "erpn":
+                source_field = child_table.get("erpn_fieldname")
+                target_field = child_table.get("fbooks_fieldname")
 
-                if not self.doc_dict.get(source_table_fieldname):
-                    continue
+            if not target_field:
+                continue
 
-                self.converted_doc[target_table_fieldname] = []
+            if not self.doc_dict.get(source_field):
+                continue
 
-                for row in self.doc_dict.get(source_table_fieldname):
-                    child_doc_item = {}
+            self.converted_doc[target_field] = []
+            field_map = child_table.get("fieldmap")
+            if self.target == "erpn":
+                field_map = {v: k for k, v in field_map.items()}
 
-                    field_map = child_table.get("fieldmap")
+            for row in self.doc_dict.get(source_field):
+                child_doc_item = {}
 
-                    for field in field_map:
-                        if self.target == "erpn":
-                            source_fieldname_idx = list(field_map.keys()).index(field)
-                            source_fieldname = list(field_map.values())[
-                                source_fieldname_idx
-                            ]
-                            target_fieldname = field
-                            pass
-                        else:
-                            source_fieldname = field
-                            target_fieldname = field_map.get(field)
-                            fieldname = field
+                for sfield, tfield in field_map.items():
+                    child_doc_item[tfield] = row.get(sfield)
 
-                        child_doc_item[target_fieldname] = row.get(source_fieldname)
-
-                    self.converted_doc[target_table_fieldname].append(child_doc_item)
+                self.converted_doc[target_field].append(child_doc_item)
 
     def _get_fieldname(self, field):
-        if field == "doctype" or field == "fbooksDocName":
-            return False
+        if field in ("doctype", "fbooksDocName",):
+            return None
 
         if not self.field_map:
-            return False
+            return None
 
-        return self._get_fieldname_from_map(field)
-
-    def _get_fieldname_from_map(self, field):
-        try:
-            if self.target == "erpn":
-                field_name_idx = list(self.field_map.values()).index(field)
-                key_name = list(self.field_map.keys())[field_name_idx]
-
-            else:
-                if not self.field_map[field]:
-                    return False
-
-                key_name = self.field_map[field]
-
-            return key_name
-        except:
-            return False
+        return self.field_map.get(field)
 
     def _fill_missing_values_for_fbooks(self):
         pass
 
     def _fill_missing_values_for_erpn(self):
         pass
-
-    def get_doc_as_list(self):
-        return self.doc_dict or False
 
     def get_converted_doc(self):
         self._convert_doc()
@@ -123,87 +98,67 @@ class DocConverterBase:
         else:
             self._fill_missing_values_for_fbooks()
 
-        return self.converted_doc or False
+        return self.converted_doc
 
     def get_frappe_doc(self):
         if not self.target == "erpn":
             return False
 
-        self.frappe_doc = frappe.get_doc(self.converted_doc)
-        return self.frappe_doc
+        if not self.converted_doc:
+            self.get_converted_doc()
 
-    def run_doc_method(self, method: str):
-        try:
-            func = getattr(self, method, False)
-            func()
-        except:
-            return
-
-    def after_save(self):
-        pass
-
-    def after_cancel(self):
-        pass
+        return frappe.get_doc(self.converted_doc)
 
 
-def DocConverter(dirty_doc, target: str):
-    if isinstance(dirty_doc, dict):
-        doc_dict = dirty_doc
-    else:
-        doc_dict = dirty_doc
-        doc_dict.doctype = dirty_doc.get("doctype")
+def init_doc_converter(instance, doc_dict, target: str):
+    doctype = doc_dict.get("doctype")
+    if doctype == "Item":
+        return Item(instance, doc_dict, target)
 
-    match dirty_doc.get("doctype"):
-        case "Item":
-            return Item(doc_dict, target)
+    if doctype == "Customer":
+        return Customer(instance, doc_dict, target)
 
-        case "Customer":
-            return Customer(doc_dict, target)
+    if doctype == "Supplier":
+        return Supplier(instance, doc_dict, target)
 
-        case "Supplier":
-            return Supplier(doc_dict, target)
+    if doctype in ("Sales Invoice", "SalesInvoice",):
+        return SalesInvoice(instance, doc_dict, target)
 
-        case "Sales Invoice" | "SalesInvoice":
-            return SalesInvoice(doc_dict, target)
+    if doctype in ("Payment Entry", "Payment",):
+        return PaymentEntry(instance, doc_dict, target)
 
-        case "Payment Entry" | "Payment":
-            return PaymentEntry(doc_dict, target)
+    if doctype in ("Stock Entry", "StockMovement",):
+        return StockEntry(instance, doc_dict, target)
 
-        case "Stock Entry" | "StockMovement":
-            return StockEntry(doc_dict, target)
+    if doctype in ("Price List", "PriceList",):
+        return PriceList(instance, doc_dict, target)
 
-        case "Price List" | "PriceList":
-            return PriceList(doc_dict, target)
+    if doctype in ("Item Price", "PriceListItem",):
+        return ItemPrice(instance, doc_dict, target)
 
-        case "Item Price" | "PriceListItem":
-            return ItemPrice(doc_dict, target)
+    if doctype in ("Serial No", "SerialNumber",):
+        return SerialNumber(instance, doc_dict, target)
 
-        case "Serial No" | "SerialNumber":
-            return SerialNumber(doc_dict, target)
+    if doctype == "Batch":
+        return Batch(instance, doc_dict, target)
 
-        case "Batch":
-            return Batch(doc_dict, target)
+    if doctype == "UOM":
+        return UOM(instance, doc_dict, target)
 
-        case "UOM":
-            return UOM(doc_dict, target)
+    if doctype in ("UOM Conversion Detail", "UOMConversionItem"):
+        return UOMConversionDetail(instance, doc_dict, target)
 
-        case "UOM Conversion Detail" | "UOMConversionItem":
-            return UOMConversionDetail(doc_dict, target)
+    if doctype in ("Delivery Note", "Shipment"):
+        return DeliveryNote(instance, doc_dict, target)
 
-        case "Delivery Note" | "Shipment":
-            return DeliveryNote(doc_dict, target)
+    if doctype == "Address":
+        return Address(instance, doc_dict, target)
 
-        case "Address":
-            return Address(doc_dict, target)
-
-        case _:
-            return False
+    return False
 
 
 class Item(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "image": "image",
             "item_code": "name",
@@ -225,43 +180,29 @@ class Item(DocConverterBase):
                 }
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
     def get_item_tax_template(self, name: str, target: str):
-        sync_settings = frappe.get_doc("Books Sync Settings", {"enable_sync": 1})
-        item_tax_templates = sync_settings.get("item_tax_template_map")
-        templates_map = dict()
+        templates_map = {}
 
-        for row in item_tax_templates:
-            templates_map[row.get("erpn_tax_template")] = row.get("fbooks_tax_template")
+        sfield = "erpn_tax_template"
+        tfield = "fbooks_tax_template"
+        if target == "erpn":
+            sfield, tfield = tfield, sfield
 
-        try:
-            if target == "erpn":
-                idx = list(templates_map.values()).index(name)
-                return list(templates_map.keys())[idx]
-            else:
-                idx = list(templates_map.keys()).index(name)
+        for row in (self.settings.get("item_tax_template_map") or []):
+            templates_map[row.get(sfield)] = row.get(tfield)
 
-                return list(templates_map.values())[idx]
-        except:
-            return None
+        return templates_map.get(name)
 
     def _fill_missing_values_for_fbooks(self):
-        item_price_docs = frappe.db.get_list(
-            "Item Price",
-            filters={
-                "item_code": self._dirty_doc.get("name"),
-                "price_list": "Standard Selling",
-            },
-            fields=["rate"],
+        # self.converted_doc["rate"] = item_rate
+        if not self.doc_dict.get("taxes"):
+            return
+
+        self.converted_doc["tax"] = self.get_item_tax_template(
+            self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
         )
-
-        if len(item_price_docs):
-            self.converted_doc["rate"] = item_price_docs[0][0]
-
-        if len(self.doc_dict.get("taxes")):
-            self.converted_doc["tax"] = self.get_item_tax_template(
-                self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
-            )
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
@@ -288,45 +229,27 @@ class Item(DocConverterBase):
                 {"barcode": str(self._dirty_doc.get("barcode"))}
             )
 
-    def after_save(self):
-        item_price_docs = frappe.db.get_list(
-            "Item Price",
-            filters={
-                "item_code": self._dirty_doc.get("name"),
-                "price_list": "Standard Selling",
-            },
-            fields=["name"],
-        )
-
-        if not item_price_docs:
-            return
-
-        item_price_docname = item_price_docs[0].get("name")
-
-        item_price_doc = frappe.get_doc("Item Price", item_price_docname)
-        item_price_doc.price_list_rate = self._dirty_doc.get("rate")
-        item_price_doc.save(ignore_permissions=True)
-
 
 class Customer(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "gstin": "gstin",
             "gst_category": "gstType",
             "customer_primary_address": "address",
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["customer_name"] = self._dirty_doc.get("name")
         address_name = frappe.db.get_value(
             "Books Reference",
             {
-                "doctype_name": "Address",
-                "name_in_fbooks": self.converted_doc["customer_primary_address"],
-            },["name_in_erpnext"]
+                "document_type": "Address",
+                "books_name": self.converted_doc["customer_primary_address"],
+                "instance": self.instance
+            },
+            "document_name"
         )
         self.converted_doc["customer_primary_address"]= address_name
 
@@ -335,15 +258,14 @@ class Customer(DocConverterBase):
 
 
 class Supplier(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "gstin": "gstin",
             "gst_category": "gstType",
             "supplier_primary_address": "address",
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["supplier_name"] = self._dirty_doc.get("name")
@@ -351,19 +273,20 @@ class Supplier(DocConverterBase):
         address_name = frappe.db.get_value(
             "Books Reference",
             {
-                "doctype_name": "Address",
-                "name_in_fbooks": self.converted_doc["supplier_primary_address"],
-            },["name_in_erpnext"]
+                "document_type": "Address",
+                "books_name": self.converted_doc["supplier_primary_address"],
+                "instance": self.instance
+            },
+            "document_name"
         )
         self.converted_doc["supplier_primary_address"]= address_name
+
     def _fill_missing_values_for_fbooks(self):
         self.converted_doc["role"] = "Supplier"
 
 
 class SalesInvoice(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             # "name": "name",
             # "naming_series": "numberSeries",
@@ -398,50 +321,43 @@ class SalesInvoice(DocConverterBase):
                         "conversion_factor": "unitConversionFactor",
                         "discount_percentage": "itemDiscountPercent",
                         "discount_amount": "itemDiscountAmount",
-                        "rate": "rate",
+                        "price_list_rate": "rate",
                         "amount": "amount",
-                        "base_rate": "rate",
                         # "income_account": "account",
                     },
                 },
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["disable_rounded_total"] = 1
         self.converted_doc["set_posting_time"] = 1
-        self.converted_doc["posting_date"] = convert_date_for_frappe(
+        self.converted_doc["posting_date"] = getdate(
             self.converted_doc["posting_date"]
         )
-
-        if not self.converted_doc["selling_price_list"]:
-            self.converted_doc["selling_price_list"] = "Standard Selling"
 
         for item in self.converted_doc["items"]:
             if flt(item.get("discount_percentage")) > 0:
                 discount_amount = flt(
-                    (flt(item.get("amount")) * flt(item.get("discount_percentage")))
+                    (flt(item.get("price_list_rate")) * flt(item.get("discount_percentage")))
                     / 100
                 )
 
                 item["discount_amount"] = discount_amount
-                item["rate"] = flt(item["amount"]) - discount_amount
+                item["rate"] = flt(item["price_list_rate"]) - discount_amount
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
             self.converted_doc["submitted"] = True
             self.converted_doc["cancelled"] = True
-        else:
-            self.converted_doc["submitted"] = self._dirty_doc.get("docstatus")
+            return
 
-    def before_save(self):
-        pass
+        self.converted_doc["submitted"] = self._dirty_doc.get("docstatus")
 
 
 class PaymentEntry(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             # "naming_series": "numberSeries",
             "posting_date": "date",
@@ -464,6 +380,7 @@ class PaymentEntry(DocConverterBase):
                 },
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         if self._dirty_doc.get("paymentMethod") == "Transfer":
@@ -476,23 +393,23 @@ class PaymentEntry(DocConverterBase):
         else:
             self.converted_doc["party_type"] = "Supplier"
 
-        self.converted_doc["received_amount"] = float(
+        self.converted_doc["received_amount"] = flt(
             self.converted_doc["total_allocated_amount"]
         )
 
-        self.converted_doc["paid_amount"] = float(
+        self.converted_doc["paid_amount"] = flt(
             self.converted_doc["total_allocated_amount"]
         )
 
-        self.converted_doc["posting_date"] = convert_date_for_frappe(
+        self.converted_doc["posting_date"] = getdate(
             self.converted_doc["posting_date"]
         )
 
         for row in self.converted_doc["references"]:
             reference_name_in_erpn = frappe.db.get_value(
                 "Books Reference",
-                {"name_in_fbooks": row["reference_name"]},
-                "name_in_erpnext",
+                {"books_name": row["reference_name"], "instance": self.instance},
+                "document_name",
             )
 
             row["reference_name"] = reference_name_in_erpn
@@ -505,9 +422,7 @@ class PaymentEntry(DocConverterBase):
 
 
 class StockEntry(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             # "naming_series": "numberSeries",
             "name": "name",
@@ -536,6 +451,7 @@ class StockEntry(DocConverterBase):
                 }
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         if "Material" in self.converted_doc["stock_entry_type"]:
@@ -573,12 +489,11 @@ class StockEntry(DocConverterBase):
                         serial_nos += sn.get("serial_no") + "\n"
 
                 item["serial_no"] = serial_nos
+                # add batch as well
 
 
 class PriceList(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "enabled": "isEnabled",
@@ -601,12 +516,11 @@ class PriceList(DocConverterBase):
                 }
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
 
 class ItemPrice(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
-
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "item_code": "item",
@@ -614,6 +528,7 @@ class ItemPrice(DocConverterBase):
             "price_list": "parent",
             "price_list_rate": "rate",
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_fbooks(self):
         self.converted_doc["parentSchemaName"] = get_doctype_name(
@@ -623,44 +538,43 @@ class ItemPrice(DocConverterBase):
 
 
 class SerialNumber(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "serial_no": "name",
             "item_code": "item",
             "description": "description",
         }
+        super().__init__(instance, dirty_doc, target)
 
 
 class Batch(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "batch_id": "name",
             "expiry_date": "expiryDate",
             "manufacturing_date": "manufactureDate",
         }
+        super().__init__(instance, dirty_doc, target)
 
 
 class UOM(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "must_be_whole_number": "isWhole",
             "uom_name": "name",
         }
+        super().__init__(instance, dirty_doc, target)
 
 
 class UOMConversionDetail(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {"uom": "uom", "conversion_factor": "conversionFactor"}
+        super().__init__(instance, dirty_doc, target)
 
 
 class DeliveryNote(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             # "naming_series": "numberSeries",
             "customer": "party",
@@ -682,6 +596,7 @@ class DeliveryNote(DocConverterBase):
                 }
             ],
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         if self.doc_dict.get("backReference"):
@@ -689,8 +604,8 @@ class DeliveryNote(DocConverterBase):
                 try:
                     reference_name_in_erpn = frappe.db.get_value(
                         "Books Reference",
-                        {"name_in_fbooks": self.doc_dict.get("backReference")},
-                        "name_in_erpnext",
+                        {"books_name": self.doc_dict.get("backReference"), "instance": self.instance},
+                        "document_name",
                     )
 
                     if reference_name_in_erpn:
@@ -700,7 +615,7 @@ class DeliveryNote(DocConverterBase):
                             "Sales Invoice Item",
                             {
                                 "parent": reference_name_in_erpn,
-                                "item_code": "Banana",
+                                "item_code": row["item_code"],
                             },
                             ["name", "amount"],
                         )
@@ -719,7 +634,7 @@ class DeliveryNote(DocConverterBase):
             self.doc_can_save = True
 
         ref_doc_name_in_erpnext = frappe.db.get_value(
-            "Books Reference", {"name_in_fbooks": ref_doc_name}, "name"
+            "Books Reference", {"books_name": ref_doc_name, "instance": self.instance}, "name"
         )
 
         if not ref_doc_name_in_erpnext:
@@ -736,8 +651,7 @@ class DeliveryNote(DocConverterBase):
 
 
 class Address(DocConverterBase):
-    def __init__(self, dirty_doc, target):
-        super().__init__(dirty_doc, target)
+    def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
             "address_line1": "addressLine1",
@@ -747,6 +661,7 @@ class Address(DocConverterBase):
             "country": "country",
             "pincode": "postalCode",
         }
+        super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["address_title"] = self.converted_doc.get("name")
