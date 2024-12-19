@@ -335,8 +335,13 @@ class SalesInvoice(DocConverterBase):
             "Books Instance", self.instance, "pos_profile"
         )
         if pos_profile:
-            self.converted_doc["is_pos"] = 1
-            self.converted_doc["pos_profile"] = pos_profile
+            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+    
+        self.converted_doc["is_pos"] = 1
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc["company"] = frappe.db.get_value(
+            "POS Profile", pos_profile, "company"
+        )
 
         for item in self.converted_doc["items"]:
             if flt(item.get("discount_percentage")) > 0:
