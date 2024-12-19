@@ -121,7 +121,7 @@ def sync_transactions(instance, transaction_type, records):
 @frappe.whitelist(methods=["POST"])
 def update_status(instance, data):
     ref_data = {
-        "doctype": "Books Sync Queue",
+        "doctype": data.get("doctype"),
         "name": data.get("nameInERPNext"),
         "books_name": data.get("nameInFBooks"),
     }
