@@ -8,8 +8,9 @@
   "enabled",
   "section_break_gejx",
   "device_id",
+  "instance_name",
   "column_break_didr",
-  "instance_name"
+  "pos_profile"
  ],
  "fields": [
   {
@@ -40,11 +41,17 @@
    "fieldname": "instance_name",
    "fieldtype": "Data",
    "label": "Instance Name"
+  },
+  {
+   "fieldname": "pos_profile",
+   "fieldtype": "Link",
+   "label": "POS Profile",
+   "options": "POS Profile"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-18 09:15:57.899020",
+ "modified": "2024-12-19 17:06:08.589574",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Instance",
