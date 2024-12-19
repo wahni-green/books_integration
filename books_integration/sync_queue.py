@@ -30,7 +30,7 @@ def add_doc_to_sync_queue(doc, method=None):
                 {
                     "doctype": "Books Sync Queue",
                     "document_name": doc.name,
-                    "doctype_name": doc.doctype,
+                    "document_type": doc.doctype,
                     "books_instance": instance,
                 }
             ).insert()
