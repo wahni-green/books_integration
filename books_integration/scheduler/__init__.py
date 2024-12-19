@@ -102,6 +102,7 @@ def create_record(
 ):
     doc = _doc.get_frappe_doc()
     doc.flags.ignore_permissions = True
+    doc.run_method("set_missing_values")
     doc.insert()
 
     if submit and doc.meta.is_submittable:
