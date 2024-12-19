@@ -1,63 +1,10 @@
+# Copyright (c) 2024, Wahni IT Solutions and contributors
+# For license information, please see license.txt
+
 import frappe
-import datetime
 
 
-def get_doctype_name(doctype: str, target, doc=None):
-    if target == "erpn":
-        if doc and doctype == "Party":
-            return doc.get("role")
-
-        doctype_name_idx = list(doctype_map.values()).index(doctype)
-        return list(doctype_map.keys())[doctype_name_idx]
-
-    else:
-        if not doctype and not doc.get("doctype"):
-            return
-
-        doctype_name_idx = list(doctype_map.keys()).index(doctype)
-        return list(doctype_map.values())[doctype_name_idx]
-
-
-def update_books_reference(instance, reference):
-    doctype = get_doctype_name(
-        reference.get("doctype"), "erpn"
-    )
-    existing_ref = frappe.db.get_value(
-        {
-            "doctype": "Books Reference",
-            "document_type": doctype,
-            "document_name": reference.get("name"),
-            "instance": instance,
-        },
-        ["books_name", "name"],
-        as_dict=True,
-    )
-
-    if not existing_ref:
-        frappe.get_doc(
-            {
-                "doctype": "Books Reference",
-                "document_type": doctype,
-                "document_name": reference.get("name"),
-                "instance": instance,
-                "books_name": reference.get("books_name"),
-            },
-        ).insert()
-        return
-
-    if existing_ref.books_name == reference.get("books_name"):
-        return
-
-    if existing_ref.books_name != reference.get("books_name"):
-        frappe.db.set_value(
-            "Books Reference", existing_ref.name, "books_name", reference.get("books_name")
-        )
-
-    return
-
-
-
-doctype_map = {
+ERP_DOCTYPE_MAP = {
     "Item": "Item",
     "Customer": "Customer",
     "Supplier": "Supplier",
@@ -75,12 +22,62 @@ doctype_map = {
     "Address": "Address"
 }
 
+BOOKS_DOCTYPE_MAP = {v: k for k, v in ERP_DOCTYPE_MAP.items()}
 
-def convert_date_for_frappe(input_date):
-    input_datetime = datetime.datetime.fromisoformat(input_date)
-    output_str = input_datetime.strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
 
-    return output_str
+def get_doctype_name(doctype: str, target, doc=None):
+    if not target:
+        return
+
+    if not doctype:
+        if not doc.get("doctype"):
+            return
+        doctype = doc.get("doctype")
+
+    if target == "erpn":
+        if doc and doctype == "Party":
+            return doc.get("role")
+        return BOOKS_DOCTYPE_MAP.get(doctype)
+
+    return ERP_DOCTYPE_MAP.get(doctype)
+
+
+def update_books_reference(instance, reference):
+    doctype = get_doctype_name(
+        reference.get("doctype"), "erpn"
+    )
+    existing_ref = frappe.db.get_value(
+        "Books Reference",
+        {
+            "document_type": doctype,
+            "document_name": reference.get("name"),
+            "books_instance": instance,
+        },
+        ["books_name", "name"],
+        as_dict=True,
+    )
+
+    if not existing_ref:
+        frappe.get_doc(
+            {
+                "doctype": "Books Reference",
+                "document_type": doctype,
+                "document_name": reference.get("name"),
+                "books_instance": instance,
+                "books_name": reference.get("books_name"),
+            },
+        ).insert()
+        return
+
+    if existing_ref.books_name == reference.get("books_name"):
+        return
+
+    if existing_ref.books_name != reference.get("books_name"):
+        frappe.db.set_value(
+            "Books Reference", existing_ref.name, "books_name", reference.get("books_name")
+        )
+
+    return
 
 
 def pretty_json(obj):
