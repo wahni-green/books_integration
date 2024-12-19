@@ -218,11 +218,6 @@ class Item(DocConverterBase):
                 }
             )
 
-        if len(str(self._dirty_doc.get("hsnCode"))) < 6:
-            self.converted_doc["gst_hsn_code"] = "0" + str(
-                self._dirty_doc.get("hsnCode")
-            )
-
         if self.doc_dict.get("barcode"):
             self.converted_doc["barcodes"] = []
             self.converted_doc["barcodes"].append(
