@@ -73,7 +73,9 @@ def process_data(instance, data, doctype):
             conv_doc,
             data.get("name"),
             data.get("submitted"),
-            data.get("cancelled")
+            data.get("cancelled"),
+            data.get("doctype"),
+            instance
         )
         return
 
@@ -95,7 +97,9 @@ def process_data(instance, data, doctype):
         _doc.cancel()
 
 
-def create_record(_doc, ref, submit, cancel):
+def create_record(
+    _doc, ref, submit, cancel, doctype, instance
+):
     doc = _doc.get_frappe_doc()
     doc.flags.ignore_permissions = True
     doc.insert()
@@ -106,4 +110,9 @@ def create_record(_doc, ref, submit, cancel):
     if cancel and doc.docstatus == 1:
         doc.cancel()
 
-    update_books_reference(doc.doctype, doc.name, ref)
+    reference = {
+        "doctype": doctype,
+        "name": doc.name,
+        "books_name": ref
+    }
+    update_books_reference(instance, reference)
