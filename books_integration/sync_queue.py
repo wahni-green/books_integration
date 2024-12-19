@@ -5,6 +5,9 @@ import frappe
 
 
 def add_doc_to_sync_queue(doc, method=None):
+    if frappe.flags.in_books_process:
+        return
+
     if doc.meta.is_submittable and doc.docstatus == 0:
         return
 
@@ -30,7 +33,7 @@ def add_doc_to_sync_queue(doc, method=None):
                 {
                     "doctype": "Books Sync Queue",
                     "document_name": doc.name,
-                    "doctype_name": doc.doctype,
+                    "document_type": doc.doctype,
                     "books_instance": instance,
                 }
             ).insert()

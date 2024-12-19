@@ -29,6 +29,7 @@ def process_transactions():
 
     frappe.db.set_value("Books Integration Log", log.name, "processed", 1)
     data = json.loads(log.data)
+    frappe.flags.in_books_process = True
     for record in data:
         try:
             doctype = get_doctype_name(record.get("doctype"), "erpn")
@@ -43,6 +44,7 @@ def process_transactions():
                 "books_integration_log": log.name
             }).insert(ignore_permissions=True)
 
+    frappe.flags.in_books_process = False
     frappe.enqueue(
         "books_integration.scheduler.process_transactions",
         queue="long",
