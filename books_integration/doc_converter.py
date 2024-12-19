@@ -247,7 +247,7 @@ class Customer(DocConverterBase):
             {
                 "document_type": "Address",
                 "books_name": self.converted_doc["customer_primary_address"],
-                "instance": self.instance
+                "books_instance": self.instance
             },
             "document_name"
         )
@@ -275,7 +275,7 @@ class Supplier(DocConverterBase):
             {
                 "document_type": "Address",
                 "books_name": self.converted_doc["supplier_primary_address"],
-                "instance": self.instance
+                "books_instance": self.instance
             },
             "document_name"
         )
@@ -408,7 +408,7 @@ class PaymentEntry(DocConverterBase):
         for row in self.converted_doc["references"]:
             reference_name_in_erpn = frappe.db.get_value(
                 "Books Reference",
-                {"books_name": row["reference_name"], "instance": self.instance},
+                {"books_name": row["reference_name"], "books_instance": self.instance},
                 "document_name",
             )
 
@@ -604,7 +604,7 @@ class DeliveryNote(DocConverterBase):
                 try:
                     reference_name_in_erpn = frappe.db.get_value(
                         "Books Reference",
-                        {"books_name": self.doc_dict.get("backReference"), "instance": self.instance},
+                        {"books_name": self.doc_dict.get("backReference"), "books_instance": self.instance},
                         "document_name",
                     )
 
@@ -634,7 +634,7 @@ class DeliveryNote(DocConverterBase):
             self.doc_can_save = True
 
         ref_doc_name_in_erpnext = frappe.db.get_value(
-            "Books Reference", {"books_name": ref_doc_name, "instance": self.instance}, "name"
+            "Books Reference", {"books_name": ref_doc_name, "books_instance": self.instance}, "name"
         )
 
         if not ref_doc_name_in_erpnext:
