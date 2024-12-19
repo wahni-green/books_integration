@@ -5,6 +5,9 @@ import frappe
 
 
 def add_doc_to_sync_queue(doc, method=None):
+    if frappe.flags.in_books_process:
+        return
+
     if doc.meta.is_submittable and doc.docstatus == 0:
         return
 
