@@ -179,6 +179,7 @@ class Item(DocConverterBase):
                 }
             ],
         }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
     def get_item_tax_template(self, name: str, target: str):
@@ -189,14 +190,16 @@ class Item(DocConverterBase):
         if target == "erpn":
             sfield, tfield = tfield, sfield
 
-        settings = frappe.get_cached_doc("Books Sync Settings")
-        for row in (settings.get("tax_mapping") or []):
+        for row in (self.settings.get("tax_mapping") or []):
             templates_map[row.get(sfield)] = row.get(tfield)
 
         return templates_map.get(name)
 
     def _fill_missing_values_for_fbooks(self):
         # self.converted_doc["rate"] = item_rate
+        if self.settings.sync_item_as_non_inventory:
+            self.converted_doc["trackItem"] = 0
+
         if not self.doc_dict.get("taxes"):
             return
 
