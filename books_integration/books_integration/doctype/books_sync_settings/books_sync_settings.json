@@ -12,6 +12,7 @@
   "section_break_cdvs",
   "sync_docs",
 <<<<<<< HEAD
+<<<<<<< HEAD
   "item_tab",
   "item_tax_template_map_section",
   "sync_item_as_non_inventory",
@@ -19,6 +20,11 @@
   "tax_tab",
   "item_tax_template_map_section",
 >>>>>>> 00b2187 (refactor: books sync settings)
+=======
+  "item_tab",
+  "item_tax_template_map_section",
+  "sync_item_as_non_inventory",
+>>>>>>> 00fde36 (feat: option to sync items as non-inventory)
   "tax_mapping"
  ],
  "fields": [
@@ -48,6 +54,7 @@
   },
   {
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
    "fieldname": "tax_tab",
    "fieldtype": "Tab Break",
@@ -55,6 +62,8 @@
   },
   {
 >>>>>>> 00b2187 (refactor: books sync settings)
+=======
+>>>>>>> 00fde36 (feat: option to sync items as non-inventory)
    "fieldname": "section_break_cdvs",
    "fieldtype": "Section Break"
   },
@@ -70,6 +79,9 @@
    "label": "Tax Mapping",
    "options": "Books Tax Mapping"
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 00fde36 (feat: option to sync items as non-inventory)
   },
   {
    "fieldname": "item_tab",
@@ -81,18 +93,25 @@
    "fieldname": "sync_item_as_non_inventory",
    "fieldtype": "Check",
    "label": "Sync Items as Non-Inventory"
+<<<<<<< HEAD
 =======
 >>>>>>> 00b2187 (refactor: books sync settings)
+=======
+>>>>>>> 00fde36 (feat: option to sync items as non-inventory)
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
 <<<<<<< HEAD
+<<<<<<< HEAD
  "modified": "2024-12-26 11:11:17.803486",
 =======
  "modified": "2024-12-26 10:06:36.088606",
 >>>>>>> 00b2187 (refactor: books sync settings)
+=======
+ "modified": "2024-12-26 11:11:17.803486",
+>>>>>>> 00fde36 (feat: option to sync items as non-inventory)
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
