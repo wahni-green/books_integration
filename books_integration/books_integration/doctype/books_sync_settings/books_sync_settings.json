@@ -11,9 +11,14 @@
   "column_break_wdst",
   "section_break_cdvs",
   "sync_docs",
+<<<<<<< HEAD
   "item_tab",
   "item_tax_template_map_section",
   "sync_item_as_non_inventory",
+=======
+  "tax_tab",
+  "item_tax_template_map_section",
+>>>>>>> 00b2187 (refactor: books sync settings)
   "tax_mapping"
  ],
  "fields": [
@@ -42,6 +47,14 @@
    "fieldtype": "Section Break"
   },
   {
+<<<<<<< HEAD
+=======
+   "fieldname": "tax_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tax"
+  },
+  {
+>>>>>>> 00b2187 (refactor: books sync settings)
    "fieldname": "section_break_cdvs",
    "fieldtype": "Section Break"
   },
@@ -56,6 +69,7 @@
    "fieldtype": "Table",
    "label": "Tax Mapping",
    "options": "Books Tax Mapping"
+<<<<<<< HEAD
   },
   {
    "fieldname": "item_tab",
@@ -67,12 +81,18 @@
    "fieldname": "sync_item_as_non_inventory",
    "fieldtype": "Check",
    "label": "Sync Items as Non-Inventory"
+=======
+>>>>>>> 00b2187 (refactor: books sync settings)
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
+<<<<<<< HEAD
  "modified": "2024-12-26 11:11:17.803486",
+=======
+ "modified": "2024-12-26 10:06:36.088606",
+>>>>>>> 00b2187 (refactor: books sync settings)
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",

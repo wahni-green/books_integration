@@ -190,7 +190,12 @@ class Item(DocConverterBase):
         if target == "erpn":
             sfield, tfield = tfield, sfield
 
+<<<<<<< HEAD
         for row in (self.settings.get("tax_mapping") or []):
+=======
+        settings = frappe.get_cached_doc("Books Sync Settings")
+        for row in (settings.get("tax_mapping") or []):
+>>>>>>> 00b2187 (refactor: books sync settings)
             templates_map[row.get(sfield)] = row.get(tfield)
 
         return templates_map.get(name)
