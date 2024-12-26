@@ -45,6 +45,14 @@ def document_should_sync(doctype):
         return False
 
     if doctype == "Item Price":
-        return settings.sync_price_list
+        doctype = ["Price List"]
+    elif doctype == "Mode of Payment":
+        doctype = ["Sales Invoice", "Payment Entry"]
+    else:
+        doctype = [doctype]
 
-    return settings.get("sync_{}".format(frappe.scrub(doctype)))
+    for row in settings.sync_docs:
+        if row.document_type in doctype:
+            return True
+
+    return False

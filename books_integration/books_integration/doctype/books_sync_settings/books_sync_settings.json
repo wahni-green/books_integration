@@ -6,50 +6,14 @@
  "engine": "InnoDB",
  "field_order": [
   "enable_sync",
-  "column_break_wdst",
+  "section_break_bpgo",
   "sync_interval",
-  "item_tab",
-  "sync_item",
-  "column_break_bing",
-  "item_sync_type",
+  "column_break_wdst",
+  "section_break_cdvs",
+  "sync_docs",
+  "tax_tab",
   "item_tax_template_map_section",
-  "item_tax_template_map",
-  "customer_tab",
-  "sync_customer",
-  "column_break_ynxb",
-  "customer_sync_type",
-  "supplier_tab",
-  "sync_supplier",
-  "column_break_brka",
-  "supplier_sync_type",
-  "sales_invoice_tab",
-  "sync_sales_invoice",
-  "column_break_lsjd",
-  "sales_invoice_sync_type",
-  "sales_payment_tab",
-  "sync_sales_payment",
-  "column_break_gfme",
-  "sales_payment_sync_type",
-  "stock_tab",
-  "sync_stock_entry",
-  "column_break_zsky",
-  "stock_sync_type",
-  "price_list_tab",
-  "sync_price_list",
-  "column_break_dipg",
-  "price_list_sync_type",
-  "serial_number_tab",
-  "sync_serial_number",
-  "column_break_pncf",
-  "serial_number_sync_type",
-  "batch_tab",
-  "sync_batches",
-  "column_break_lrtp",
-  "batch_sync_type",
-  "delivery_note_tab",
-  "sync_delivery_note",
-  "column_break_safd",
-  "delivery_note_sync_type"
+  "tax_mapping"
  ],
  "fields": [
   {
@@ -69,230 +33,39 @@
    "label": "Sync Interval"
   },
   {
-   "fieldname": "item_tab",
-   "fieldtype": "Tab Break",
-   "label": "Item"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_item",
-   "fieldtype": "Check",
-   "label": "Sync Item"
-  },
-  {
-   "fieldname": "column_break_bing",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "item_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
    "fieldname": "item_tax_template_map_section",
-   "fieldtype": "Section Break",
-   "label": "Item Tax Template Map"
+   "fieldtype": "Section Break"
   },
   {
-   "fieldname": "item_tax_template_map",
+   "fieldname": "section_break_bpgo",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "tax_tab",
+   "fieldtype": "Tab Break",
+   "label": "Tax"
+  },
+  {
+   "fieldname": "section_break_cdvs",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "sync_docs",
    "fieldtype": "Table",
-   "options": "Item Tax Template Map"
+   "label": "Sync Docs",
+   "options": "Book Sync Detail"
   },
   {
-   "fieldname": "customer_tab",
-   "fieldtype": "Tab Break",
-   "label": "Customer"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_customer",
-   "fieldtype": "Check",
-   "label": "Sync Customer"
-  },
-  {
-   "fieldname": "column_break_ynxb",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "supplier_tab",
-   "fieldtype": "Tab Break",
-   "label": "Supplier"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_supplier",
-   "fieldtype": "Check",
-   "label": "Sync Supplier"
-  },
-  {
-   "fieldname": "column_break_brka",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "supplier_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "fieldname": "sales_invoice_tab",
-   "fieldtype": "Tab Break",
-   "label": "Sales Invoice"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_sales_invoice",
-   "fieldtype": "Check",
-   "label": "Sync Sales Invoice"
-  },
-  {
-   "fieldname": "column_break_lsjd",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sales_invoice_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "Books to ERPNext"
-  },
-  {
-   "fieldname": "sales_payment_tab",
-   "fieldtype": "Tab Break",
-   "label": "Sales Payment"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_sales_payment",
-   "fieldtype": "Check",
-   "label": "Sync Sales Payment"
-  },
-  {
-   "fieldname": "column_break_gfme",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "sales_payment_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "Books to ERPNext"
-  },
-  {
-   "fieldname": "stock_tab",
-   "fieldtype": "Tab Break",
-   "label": "Stock"
-  },
-  {
-   "fieldname": "column_break_zsky",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "stock_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "fieldname": "price_list_tab",
-   "fieldtype": "Tab Break",
-   "label": "Price List"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_price_list",
-   "fieldtype": "Check",
-   "label": "Sync Price List"
-  },
-  {
-   "fieldname": "column_break_dipg",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "price_list_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "fieldname": "serial_number_tab",
-   "fieldtype": "Tab Break",
-   "label": "Serial Number"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_serial_number",
-   "fieldtype": "Check",
-   "label": "Sync Serial Number"
-  },
-  {
-   "fieldname": "column_break_pncf",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "serial_number_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "fieldname": "batch_tab",
-   "fieldtype": "Tab Break",
-   "label": "Batch"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_batches",
-   "fieldtype": "Check",
-   "label": "Sync Batch"
-  },
-  {
-   "fieldname": "column_break_lrtp",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "batch_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books"
-  },
-  {
-   "fieldname": "delivery_note_tab",
-   "fieldtype": "Tab Break",
-   "label": "Delivery Note"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_delivery_note",
-   "fieldtype": "Check",
-   "label": "Sync Delivery Note"
-  },
-  {
-   "fieldname": "column_break_safd",
-   "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "delivery_note_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "fieldname": "customer_sync_type",
-   "fieldtype": "Select",
-   "label": "Sync Type",
-   "options": "ERPNext to Books\nBooks to ERPNext\nTwo Way"
-  },
-  {
-   "default": "0",
-   "fieldname": "sync_stock_entry",
-   "fieldtype": "Check",
-   "label": "Sync Stock Entry"
+   "fieldname": "tax_mapping",
+   "fieldtype": "Table",
+   "label": "Tax Mapping",
+   "options": "Books Tax Mapping"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-12-03 16:46:30.976373",
+ "modified": "2024-12-26 10:06:36.088606",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",

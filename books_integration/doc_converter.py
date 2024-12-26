@@ -25,7 +25,6 @@ class DocConverterBase:
         self.doc_can_save = True
         self.doc_can_submit = True
         self.is_dict = isinstance(dirty_doc, dict)
-        self.settings = frappe.get_cached_doc("Books Sync Settings")
 
         if self.target == "erpn":
             child_table = self.field_map.pop("child_tables", [])
@@ -186,11 +185,12 @@ class Item(DocConverterBase):
         templates_map = {}
 
         sfield = "erpn_tax_template"
-        tfield = "fbooks_tax_template"
+        tfield = "books_tax_template"
         if target == "erpn":
             sfield, tfield = tfield, sfield
 
-        for row in (self.settings.get("item_tax_template_map") or []):
+        settings = frappe.get_cached_doc("Books Sync Settings")
+        for row in (settings.get("tax_mapping") or []):
             templates_map[row.get(sfield)] = row.get(tfield)
 
         return templates_map.get(name)
