@@ -25,7 +25,6 @@ class DocConverterBase:
         self.doc_can_save = True
         self.doc_can_submit = True
         self.is_dict = isinstance(dirty_doc, dict)
-        self.settings = frappe.get_cached_doc("Books Sync Settings")
 
         if self.target == "erpn":
             child_table = self.field_map.pop("child_tables", [])
@@ -180,23 +179,27 @@ class Item(DocConverterBase):
                 }
             ],
         }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
     def get_item_tax_template(self, name: str, target: str):
         templates_map = {}
 
         sfield = "erpn_tax_template"
-        tfield = "fbooks_tax_template"
+        tfield = "books_tax_template"
         if target == "erpn":
             sfield, tfield = tfield, sfield
 
-        for row in (self.settings.get("item_tax_template_map") or []):
+        for row in (self.settings.get("tax_mapping") or []):
             templates_map[row.get(sfield)] = row.get(tfield)
 
         return templates_map.get(name)
 
     def _fill_missing_values_for_fbooks(self):
         # self.converted_doc["rate"] = item_rate
+        if self.settings.sync_item_as_non_inventory:
+            self.converted_doc["trackItem"] = 0
+
         if not self.doc_dict.get("taxes"):
             return
 
@@ -334,9 +337,16 @@ class SalesInvoice(DocConverterBase):
         pos_profile = frappe.db.get_value(
             "Books Instance", self.instance, "pos_profile"
         )
-        if pos_profile:
-            self.converted_doc["is_pos"] = 1
-            self.converted_doc["pos_profile"] = pos_profile
+        if not pos_profile:
+            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, ["company", "customer"], as_dict=True
+        )
+        self.converted_doc["is_pos"] = 1
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["customer"] = pos_details.get("customer")
 
         for item in self.converted_doc["items"]:
             if flt(item.get("discount_percentage")) > 0:

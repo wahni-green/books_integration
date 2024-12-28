@@ -5,5 +5,5 @@
 from frappe.model.document import Document
 
 
-class ItemTaxTemplateMap(Document):
+class BooksTaxMapping(Document):
 	pass
