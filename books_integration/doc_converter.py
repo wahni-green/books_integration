@@ -162,7 +162,6 @@ class Item(DocConverterBase):
             "image": "image",
             "item_code": "name",
             "stock_uom": "unit",
-            "standard_rate": "rate",
             "description": "description",
             "gst_hsn_code": "hsnCode",
             # "barcodes": "barcode",
