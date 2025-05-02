@@ -49,11 +49,8 @@ def get_pending_docs(instance):
             compatable_doc["fbooksDocName"] = existing_books_ref
 
         compatable_doc["books_sync_id"] = queued_doc.name
+        compatable_doc["rate"] = item_rates.get(compatable_doc["name"])
         docs.append(compatable_doc)
-        
-    for doc, rate in zip(docs, item_rates):
-        if doc.name == rate.item_code:
-            doc.rate == rate.price_list_rate
 
     return {"success": True, "data": docs}
 
@@ -149,34 +146,34 @@ def update_status(instance, data):
     return {"success": True}
 
 def get_item_rates():
-	price_list = frappe.db.get_single_value("Books Item Settings", "price_list")
+    price_list = frappe.db.get_single_value("Books Item Settings", "price_list")
     if not price_list:
         return None
-	item_price = frappe.qb.DocType("Item Price")
+    item_price = frappe.qb.DocType("Item Price")
 
-	ip_subquery = (
-		frappe.qb.from_(item_price)
-		.select(
-			item_price.item_code,
-			Max(item_price.valid_from).as_("valid_from"),
-		)
-		.where(item_price.price_list == price_list)
-		.where(IfNull(item_price.valid_from, "2000-01-01") <= today())
-		.groupby(item_price.item_code)
-		.as_("ip_subquery")
-	)
-	item_rates = (
-		frappe.qb.from_(item_price)
-		.inner_join(ip_subquery)
-		.on(
-			(item_price.item_code == ip_subquery.item_code)
-			& (item_price.valid_from == ip_subquery.valid_from)
-		)
-		.select(
-			item_price.item_code,
-			item_price.price_list_rate,
-		)
-		.where(item_price.price_list == price_list)
-		.run()
-	)
-	return dict(item_rates) or {}
+    ip_subquery = (
+        frappe.qb.from_(item_price)
+        .select(
+            item_price.item_code,
+            Max(item_price.valid_from).as_("valid_from"),
+        )
+        .where(item_price.price_list == price_list)
+        .where(IfNull(item_price.valid_from, "2000-01-01") <= today())
+        .groupby(item_price.item_code)
+        .as_("ip_subquery")
+    )
+    item_rates = (
+        frappe.qb.from_(item_price)
+        .inner_join(ip_subquery)
+        .on(
+            (item_price.item_code == ip_subquery.item_code)
+            & (item_price.valid_from == ip_subquery.valid_from)
+        )
+        .select(
+            item_price.item_code,
+            item_price.price_list_rate,
+        )
+        .where(item_price.price_list == price_list)
+        .run()
+    )
+    return dict(item_rates) or {}
