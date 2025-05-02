@@ -2,13 +2,20 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.utils import create_batch
+from frappe.utils import create_batch, today
 from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
+from frappe.query_builder.functions import IfNull, Max
 
 
 @frappe.whitelist(methods=["GET"])
 def get_pending_docs(instance):
+    item_rates = get_item_rates()
+    if not item_rates:
+        return {
+            "success": "false",
+            "message": "price list not selected in Books Item Settings"
+        }
     queued_docs = frappe.db.get_all(
         "Books Sync Queue",
         filters={"books_instance": instance},
@@ -136,3 +143,36 @@ def update_status(instance, data):
         return {"success": False}
 
     return {"success": True}
+
+def get_item_rates():
+    price_list = frappe.db.get_single_value("Books Item Settings", "price_list")
+    if not price_list:
+        return None
+    item_price = frappe.qb.DocType("Item Price")
+
+    ip_subquery = (
+        frappe.qb.from_(item_price)
+        .select(
+            item_price.item_code,
+            Max(item_price.valid_from).as_("valid_from"),
+        )
+        .where(item_price.price_list == price_list)
+        .where(IfNull(item_price.valid_from, "2000-01-01") <= today())
+        .groupby(item_price.item_code)
+        .as_("ip_subquery")
+    )
+    item_rates = (
+        frappe.qb.from_(item_price)
+        .inner_join(ip_subquery)
+        .on(
+            (item_price.item_code == ip_subquery.item_code)
+            & (item_price.valid_from == ip_subquery.valid_from)
+        )
+        .select(
+            item_price.item_code,
+            item_price.price_list_rate,
+        )
+        .where(item_price.price_list == price_list)
+        .run()
+    )
+    return dict(item_rates) or {}

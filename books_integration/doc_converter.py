@@ -73,6 +73,13 @@ class DocConverterBase:
                     child_doc_item[tfield] = row.get(sfield)
 
                 self.converted_doc[target_field].append(child_doc_item)
+        
+        # return item tax according to its fbooks name
+        erpn_tax = self.doc_dict.get("taxes", [None])[0].get("item_tax_template")
+        tax_names = frappe.db.get_single_value("Books Item Tax Settings", "frappe_books_tax")
+        for tax in tax_names:
+            if tax.get("erpnext_tax") == erpn_tax:
+                self.converted_doc.setdefault("tax", tax.get("frappe_books_tax"))
 
     def _get_fieldname(self, field):
         if field in ("doctype", "fbooksDocName",):
@@ -132,8 +139,8 @@ def init_doc_converter(instance, doc_dict, target: str):
     if doctype in ("Price List", "PriceList",):
         return PriceList(instance, doc_dict, target)
 
-    if doctype in ("Item Price", "PriceListItem",):
-        return ItemPrice(instance, doc_dict, target)
+    # if doctype in ("Item Price", "PriceListItem",):
+    #     return ItemPrice(instance, doc_dict, target)
 
     if doctype in ("Serial No", "SerialNumber",):
         return SerialNumber(instance, doc_dict, target)
@@ -162,7 +169,6 @@ class Item(DocConverterBase):
             "image": "image",
             "item_code": "name",
             "stock_uom": "unit",
-            "standard_rate": "rate",
             "description": "description",
             "gst_hsn_code": "hsnCode",
             # "barcodes": "barcode",
