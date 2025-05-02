@@ -49,7 +49,6 @@ def get_pending_docs(instance):
             compatable_doc["fbooksDocName"] = existing_books_ref
 
         compatable_doc["books_sync_id"] = queued_doc.name
-        compatable_doc["rate"] = item_rates.get(compatable_doc["name"])
         docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
