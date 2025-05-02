@@ -132,8 +132,8 @@ def init_doc_converter(instance, doc_dict, target: str):
     if doctype in ("Price List", "PriceList",):
         return PriceList(instance, doc_dict, target)
 
-    if doctype in ("Item Price", "PriceListItem",):
-        return ItemPrice(instance, doc_dict, target)
+    # if doctype in ("Item Price", "PriceListItem",):
+    #     return ItemPrice(instance, doc_dict, target)
 
     if doctype in ("Serial No", "SerialNumber",):
         return SerialNumber(instance, doc_dict, target)
