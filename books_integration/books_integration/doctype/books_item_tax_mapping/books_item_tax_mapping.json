@@ -1,0 +1,42 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-02 12:20:47.446864",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "erpnext_tax",
+  "column_break_wllx",
+  "frappe_books_tax"
+ ],
+ "fields": [
+  {
+   "fieldname": "erpnext_tax",
+   "fieldtype": "Link",
+   "label": "ERPNext Tax",
+   "options": "Item Tax Template"
+  },
+  {
+   "fieldname": "column_break_wllx",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "frappe_books_tax",
+   "fieldtype": "Data",
+   "label": "Frappe Books Tax"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-02 12:22:15.841877",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Books Item Tax Mapping",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
