@@ -74,12 +74,6 @@ class DocConverterBase:
 
                 self.converted_doc[target_field].append(child_doc_item)
         
-        # return item tax according to its fbooks name
-        erpn_tax = self.doc_dict.get("taxes", [None])[0].get("item_tax_template")
-        tax_names = frappe.db.get_single_value("Books Item Tax Settings", "frappe_books_tax")
-        for tax in tax_names:
-            if tax.get("erpnext_tax") == erpn_tax:
-                self.converted_doc.setdefault("tax", tax.get("frappe_books_tax"))
 
     def _get_fieldname(self, field):
         if field in ("doctype", "fbooksDocName",):
@@ -212,6 +206,9 @@ class Item(DocConverterBase):
         self.converted_doc["tax"] = self.get_item_tax_template(
             self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
         )
+        # get barcode
+        if barcodes := self.doc_dict.get("barcodes"):
+            self.converted_doc['barcode'] = barcodes[0].get("barcode")
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
