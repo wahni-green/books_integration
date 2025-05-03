@@ -9,8 +9,6 @@
   "section_break_bpgo",
   "sync_interval",
   "column_break_wdst",
-  "section_break_cdvs",
-  "sync_docs",
   "item_tab",
   "item_tax_template_map_section",
   "sync_item_as_non_inventory",
@@ -18,7 +16,7 @@
  ],
  "fields": [
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "enable_sync",
    "fieldtype": "Check",
    "label": "Enable Sync"
@@ -42,16 +40,6 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "section_break_cdvs",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "sync_docs",
-   "fieldtype": "Table",
-   "label": "Sync Docs",
-   "options": "Book Sync Detail"
-  },
-  {
    "fieldname": "tax_mapping",
    "fieldtype": "Table",
    "label": "Tax Mapping",
@@ -72,7 +60,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2024-12-26 11:11:17.803486",
+ "modified": "2025-05-03 10:51:03.370801",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
