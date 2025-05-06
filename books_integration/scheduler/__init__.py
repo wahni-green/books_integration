@@ -47,13 +47,6 @@ def process_transactions():
             }).insert(ignore_permissions=True)
 
     frappe.flags.in_books_process = False
-    # frappe.enqueue(
-    #     "books_integration.scheduler.process_transactions",
-    #     queue="long",
-    #     enqueue_after_commit=True,
-    #     job_id="BOOKS_SYNC_TRANSACTION_JOB",
-    #     deduplicate=True
-    # )
 
 
 def process_data(instance, data, doctype):
