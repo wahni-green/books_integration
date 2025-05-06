@@ -1,0 +1,47 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2024-12-26 09:31:42.227640",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "document_type",
+  "column_break_kufg",
+  "sync_type"
+ ],
+ "fields": [
+  {
+   "fieldname": "document_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Document Type",
+   "options": "\nItem\nCustomer\nSupplier\nSales Invoice\nPayment Entry\nStock Entry\nItem Price\nSerial No\nBatch\nDelivery Note",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_kufg",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "sync_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Sync Type",
+   "options": "\nERPNext to Books\nBooks to ERPNext\nTwo Way",
+   "reqd": 1
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2024-12-26 10:09:50.274824",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Book Sync Detail",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": []
+}

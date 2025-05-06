@@ -29,10 +29,8 @@ def process_transactions():
 
     frappe.db.set_value("Books Integration Log", log.name, "processed", 1)
     data = json.loads(log.data)
-    sales_invoices = [row for row in data if row.get("doctype") == "SalesInvoice"]
-    other_docs = [row for row in data if row.get("doctype") != "SalesInvoice"]
     frappe.flags.in_books_process = True
-    for record in sales_invoices+other_docs:
+    for record in data:
         try:
             doctype = get_doctype_name(record.get("doctype"), "erpn")
             process_data(log.books_instance, record, doctype)
@@ -47,13 +45,13 @@ def process_transactions():
             }).insert(ignore_permissions=True)
 
     frappe.flags.in_books_process = False
-    # frappe.enqueue(
-    #     "books_integration.scheduler.process_transactions",
-    #     queue="long",
-    #     enqueue_after_commit=True,
-    #     job_id="BOOKS_SYNC_TRANSACTION_JOB",
-    #     deduplicate=True
-    # )
+    frappe.enqueue(
+        "books_integration.scheduler.process_transactions",
+        queue="long",
+        enqueue_after_commit=True,
+        job_id="BOOKS_SYNC_TRANSACTION_JOB",
+        deduplicate=True
+    )
 
 
 def process_data(instance, data, doctype):

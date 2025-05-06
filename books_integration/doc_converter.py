@@ -5,8 +5,6 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt, getdate
 from books_integration.utils import get_doctype_name
-from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
-from erpnext.accounts.party import get_party_account
 
 
 class DocConverterBase:
@@ -76,6 +74,12 @@ class DocConverterBase:
 
                 self.converted_doc[target_field].append(child_doc_item)
         
+        # return item tax according to its fbooks name
+        erpn_tax = self.doc_dict.get("taxes", [None])[0].get("item_tax_template")
+        tax_names = frappe.db.get_single_value("Books Item Tax Settings", "frappe_books_tax")
+        for tax in tax_names:
+            if tax.get("erpnext_tax") == erpn_tax:
+                self.converted_doc.setdefault("tax", tax.get("frappe_books_tax"))
 
     def _get_fieldname(self, field):
         if field in ("doctype", "fbooksDocName",):
@@ -99,9 +103,6 @@ class DocConverterBase:
             self._fill_missing_values_for_erpn()
         else:
             self._fill_missing_values_for_fbooks()
-
-        # if self.converted_doc['doctype'] == "Payment Entry":
-        #     frappe.throw(str(self.converted_doc))
 
         return self.converted_doc
 
@@ -211,9 +212,6 @@ class Item(DocConverterBase):
         self.converted_doc["tax"] = self.get_item_tax_template(
             self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
         )
-        # get barcode
-        if barcodes := self.doc_dict.get("barcodes"):
-            self.converted_doc['barcode'] = barcodes[0].get("barcode")
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
@@ -382,8 +380,9 @@ class PaymentEntry(DocConverterBase):
             "posting_date": "date",
             "payment_type": "paymentType",
             "mode_of_payment": "paymentMethod",
+            "party": "party",
             "total_allocated_amount": "amount",
-            # "paid_to": "paymentAccount",
+            "paid_to": "paymentAccount",
             "child_tables": [
                 {
                     "erpn_fieldname": "references",
@@ -401,18 +400,6 @@ class PaymentEntry(DocConverterBase):
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
-        pos_profile = frappe.db.get_value(
-            "Books Instance", self.instance, "pos_profile"
-        )
-        if not pos_profile:
-            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
-    
-        pos_details = frappe.db.get_value(
-            "POS Profile", pos_profile, ["company", "customer"], as_dict=True
-        )
-        self.converted_doc["company"] = pos_details.get("company")
-        self.converted_doc["party"] = pos_details.get("customer")
-
         if self._dirty_doc.get("paymentMethod") == "Transfer":
             self.converted_doc["mode_of_payment"] = "Bank Draft"
 
@@ -430,19 +417,6 @@ class PaymentEntry(DocConverterBase):
         self.converted_doc["paid_amount"] = flt(
             self.converted_doc["total_allocated_amount"]
         )
-
-        if self.converted_doc['mode_of_payment'] in ['Cash', 'Bank']:
-            bank = get_default_bank_cash_account(
-                self.converted_doc['company'],
-                self.converted_doc['mode_of_payment'],
-                self.converted_doc['mode_of_payment'],
-                account=None
-            )
-        party_account = get_party_account(
-            self.converted_doc['party_type'], self.converted_doc['party'], self.converted_doc['company']
-        )
-        self.converted_doc['paid_from'] = party_account
-        self.converted_doc['paid_to'] = bank.account
 
         self.converted_doc["posting_date"] = getdate(
             self.converted_doc["posting_date"]
