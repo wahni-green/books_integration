@@ -5,6 +5,8 @@ import frappe
 from frappe.model.document import Document
 from frappe.utils import flt, getdate
 from books_integration.utils import get_doctype_name
+from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
+from erpnext.accounts.party import get_party_account
 
 
 class DocConverterBase:
@@ -97,6 +99,9 @@ class DocConverterBase:
             self._fill_missing_values_for_erpn()
         else:
             self._fill_missing_values_for_fbooks()
+
+        # if self.converted_doc['doctype'] == "Payment Entry":
+        #     frappe.throw(str(self.converted_doc))
 
         return self.converted_doc
 
@@ -377,9 +382,8 @@ class PaymentEntry(DocConverterBase):
             "posting_date": "date",
             "payment_type": "paymentType",
             "mode_of_payment": "paymentMethod",
-            "party": "party",
             "total_allocated_amount": "amount",
-            "paid_to": "paymentAccount",
+            # "paid_to": "paymentAccount",
             "child_tables": [
                 {
                     "erpn_fieldname": "references",
@@ -397,6 +401,18 @@ class PaymentEntry(DocConverterBase):
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, ["company", "customer"], as_dict=True
+        )
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["party"] = pos_details.get("customer")
+
         if self._dirty_doc.get("paymentMethod") == "Transfer":
             self.converted_doc["mode_of_payment"] = "Bank Draft"
 
@@ -414,6 +430,19 @@ class PaymentEntry(DocConverterBase):
         self.converted_doc["paid_amount"] = flt(
             self.converted_doc["total_allocated_amount"]
         )
+
+        if self.converted_doc['mode_of_payment'] in ['Cash', 'Bank']:
+            bank = get_default_bank_cash_account(
+                self.converted_doc['company'],
+                self.converted_doc['mode_of_payment'],
+                self.converted_doc['mode_of_payment'],
+                account=None
+            )
+        party_account = get_party_account(
+            self.converted_doc['party_type'], self.converted_doc['party'], self.converted_doc['company']
+        )
+        self.converted_doc['paid_from'] = party_account
+        self.converted_doc['paid_to'] = bank.account
 
         self.converted_doc["posting_date"] = getdate(
             self.converted_doc["posting_date"]
