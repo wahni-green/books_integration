@@ -51,8 +51,35 @@ def document_should_sync(doctype):
     else:
         doctype = [doctype]
 
-    for row in settings.sync_docs:
-        if row.document_type in doctype:
-            return True
+    # for row in settings.sync_docs:
+    #     if row.document_type in doctype:
+    #         return True
+    return True
 
-    return False
+    # return False
+
+def add_item(doc, method=None):
+# runs when item price is modified
+    instances = frappe.db.get_all(
+        "Books Instance",
+        # filters={"enable_sync": 1},
+        pluck="name",
+    )
+    for instance in instances:
+        is_exists_in_queue = frappe.db.exists(
+            {
+                "doctype": "Books Sync Queue",
+                "document_name": doc.item_code,
+                "document_type": "Item",
+                "books_instance": instance,
+            }
+        )
+        if not is_exists_in_queue:
+            frappe.get_doc(
+            {
+                "doctype": "Books Sync Queue",
+                "document_name": doc.item_code,
+                "document_type": "Item",
+                "books_instance": instance,
+            }
+            ).insert()
