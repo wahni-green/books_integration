@@ -10,7 +10,7 @@ def sync_settings():
     return {
         "success": True,
         "app_version": app_version,
-        "data": frappe.get_cached_doc("Books Sync Settings").generate_sync_params()
+        "data": frappe.get_cached_doc("Books Sync Settings")
     }
 
 
