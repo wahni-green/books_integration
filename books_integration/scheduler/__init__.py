@@ -99,6 +99,10 @@ def create_record(
     doc.flags.ignore_permissions = True
     doc.run_method("set_missing_values")
     doc.insert()
+    other_docs = ["POS Opening Entry"]
+
+    if doc.doctype in other_docs:
+        doc.submit()
 
     if submit and doc.meta.is_submittable:
         doc.submit()

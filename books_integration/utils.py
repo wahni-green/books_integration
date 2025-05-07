@@ -19,7 +19,8 @@ ERP_DOCTYPE_MAP = {
     "UOM": "UOM",
     "UOM Conversion Detail": "UOMConversionItem",
     "Delivery Note": "Shipment",
-    "Address": "Address"
+    "Address": "Address",
+    "POS Opening Entry": "POSOpeningShift",
 }
 
 BOOKS_DOCTYPE_MAP = {v: k for k, v in ERP_DOCTYPE_MAP.items()}

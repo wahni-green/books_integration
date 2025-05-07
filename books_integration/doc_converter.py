@@ -159,6 +159,9 @@ def init_doc_converter(instance, doc_dict, target: str):
     if doctype == "Address":
         return Address(instance, doc_dict, target)
 
+    if doctype == "POSOpeningShift":
+        return POSOpeningShift(instance, doc_dict, target)
+
     return False
 
 
@@ -708,3 +711,49 @@ class Address(DocConverterBase):
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["address_title"] = self.converted_doc.get("name")
+
+
+class POSOpeningShift(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "period_start_date": "openingDate",
+            "child_tables": [
+                {
+                    "erpn_fieldname": "balance_details",
+                    "fbooks_fieldname": "openingAmounts",
+                    "fbooks_doctype": "openingAmounts",
+                    "erpn_doctype": "POS Opening Entry Detail",
+                    "fieldmap": {
+                        "mode_of_payment": "paymentMethod",
+                        "opening_amount": "amount",
+                    },
+                },
+            ],
+        }
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_erpn(self):
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, "company", as_dict=True
+        )
+        applicable_for_user = frappe.db.get_all(
+            "POS Profile User", filters={"parent": pos_profile}, fields=["user"]
+        )[0]
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc['cashier'] = applicable_for_user.get("user")
+        self.converted_doc['user'] = applicable_for_user.get("user")
+        self.converted_doc["period_start_date"] = getdate(
+            self.converted_doc["period_start_date"]
+        )
+        for item in self.converted_doc['balance_details']:
+            if item.get("mode_of_payment") == "Transfer":
+                item['mode_of_payment'] = "Wire Transfer"
+            if item.get("mode_of_payment") == "Bank":
+                item['mode_of_payment'] = "Credit Card"
