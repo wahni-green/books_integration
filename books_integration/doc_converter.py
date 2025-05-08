@@ -3,7 +3,7 @@
 
 import frappe
 from frappe.model.document import Document
-from frappe.utils import flt, getdate
+from frappe.utils import flt, getdate, get_datetime_str
 from books_integration.utils import get_doctype_name
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
 from erpnext.accounts.party import get_party_account
@@ -161,6 +161,9 @@ def init_doc_converter(instance, doc_dict, target: str):
 
     if doctype == "POSOpeningShift":
         return POSOpeningShift(instance, doc_dict, target)
+
+    if doctype == "POSClosingShift":
+        return POSClosingShift(instance, doc_dict, target)
 
     return False
 
@@ -733,6 +736,7 @@ class POSOpeningShift(DocConverterBase):
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
+        # set company, cashier, user and pos profile
         pos_profile = frappe.db.get_value(
             "Books Instance", self.instance, "pos_profile"
         )
@@ -745,15 +749,113 @@ class POSOpeningShift(DocConverterBase):
         applicable_for_user = frappe.db.get_all(
             "POS Profile User", filters={"parent": pos_profile}, fields=["user"]
         )[0]
+        if not applicable_for_user:
+            frappe.throw(("Applicable Users not set in POS Profile {0}").format(self.instance))
+        
         self.converted_doc["company"] = pos_details.get("company")
         self.converted_doc["pos_profile"] = pos_profile
         self.converted_doc['cashier'] = applicable_for_user.get("user")
         self.converted_doc['user'] = applicable_for_user.get("user")
-        self.converted_doc["period_start_date"] = getdate(
+        self.converted_doc["period_start_date"] = get_datetime_str(
             self.converted_doc["period_start_date"]
         )
+        # change fbooks mode of payment to erpn mode of payment
         for item in self.converted_doc['balance_details']:
             if item.get("mode_of_payment") == "Transfer":
-                item['mode_of_payment'] = "Wire Transfer"
+                item["mode_of_payment"] = "Wire Transfer"
+
             if item.get("mode_of_payment") == "Bank":
-                item['mode_of_payment'] = "Credit Card"
+                item["mode_of_payment"] = "Credit Card"
+        
+        # remove modes of payment with empty amount
+        pop_indexes = []
+        for item in self.converted_doc['balance_details']:
+            if int(item.get("opening_amount")) == 0:
+                pop_index = self.converted_doc['balance_details'].index(item)
+                pop_indexes.append(pop_index)
+
+        for index in reversed(pop_indexes):
+            self.converted_doc['balance_details'].pop(index)
+            
+
+class POSClosingShift(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "period_end_date": "closingDate",
+            "pos_opening_entry": "openingShift",
+            "child_tables": [
+                {
+                    "erpn_fieldname": "payment_reconciliation",
+                    "fbooks_fieldname": "closingAmounts",
+                    "fbooks_doctype": "closingAmounts",
+                    "erpn_doctype": "POS Closing Entry Detail",
+                    "fieldmap": {
+                        "mode_of_payment": "paymentMethod",
+                        "opening_amount": "openingAmount",
+                        "closing_amount": "closingAmount",
+                        "expected_amount": "expectedAmount",
+                        "difference": "differenceAmount",
+                    },
+                },
+            ],
+        }
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_erpn(self):
+        # set company, cashier, user and pos profile
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, "company", as_dict=True
+        )
+        applicable_for_user = frappe.db.get_all(
+            "POS Profile User", filters={"parent": pos_profile}, fields=["user"]
+        )[0]
+        if not applicable_for_user:
+            frappe.throw(("Applicable Users not set in POS Profile {0}").format(self.instance))
+
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc['cashier'] = applicable_for_user.get("user")
+        self.converted_doc['user'] = applicable_for_user.get("user")
+        self.converted_doc["period_end_date"] = get_datetime_str(
+            self.converted_doc["period_end_date"]
+        )
+        opening_entry = frappe.db.get_value(
+            "Books Reference",
+            {"books_name": self.converted_doc["pos_opening_entry"]},
+            "document_name"
+        )
+        self.converted_doc["pos_opening_entry"] = opening_entry
+
+        # change fbooks mode of payment to erpn mode of payment
+        for item in self.converted_doc["payment_reconciliation"]:
+            if item.get("mode_of_payment") == "Transfer":
+                item["mode_of_payment"] = "Wire Transfer"
+
+            if item.get("mode_of_payment") == "Bank":
+                item["mode_of_payment"] = "Credit Card"
+
+        # remove modes of payment with empty amount
+        pop_indexes = []
+        for item in self.converted_doc["payment_reconciliation"]:
+            delete_row = 0
+            amount_keys = list(item.keys())
+            amount_keys.pop(0)
+            for key in item.keys():
+                if key in amount_keys:
+                    if int(item[key]) == 0:
+                        delete_row = 1
+                    else:
+                        delete_row = 0
+            if delete_row:
+                # add index of current row to pop_indexes
+                pop_indexes.append(self.converted_doc["payment_reconciliation"].index(item))
+        
+        for index in reversed(pop_indexes):
+            self.converted_doc['payment_reconciliation'].pop(index)
+        
