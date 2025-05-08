@@ -812,11 +812,11 @@ class POSClosingShift(DocConverterBase):
         pos_details = frappe.db.get_value(
             "POS Profile", pos_profile, "company", as_dict=True
         )
-        applicable_for_user = frappe.db.get_all(
-            "POS Profile User", filters={"parent": pos_profile}, fields=["user"]
-        )[0]
+        applicable_for_user = frappe.db.get_value(
+            "POS Profile User", {"parent": pos_profile}, "user"
+        )
         if not applicable_for_user:
-            frappe.throw(("Applicable Users not set in POS Profile {0}").format(self.instance))
+            frappe.throw(("Applicable Users not set in POS Profile: {0}").format(pos_profile))
 
         self.converted_doc["company"] = pos_details.get("company")
         self.converted_doc["pos_profile"] = pos_profile
