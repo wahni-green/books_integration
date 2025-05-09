@@ -9,7 +9,11 @@
   "item_tab",
   "item_tax_template_map_section",
   "sync_item_as_non_inventory",
-  "tax_mapping"
+  "column_break_rsry",
+  "price_list",
+  "section_break_ppyl",
+  "tax_mapping",
+  "mode_of_payment_mapping"
  ],
  "fields": [
   {
@@ -34,16 +38,36 @@
    "label": "Item"
   },
   {
-   "default": "0",
+   "default": "1",
    "fieldname": "sync_item_as_non_inventory",
    "fieldtype": "Check",
    "label": "Sync Items as Non-Inventory"
+  },
+  {
+   "fieldname": "column_break_rsry",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "price_list",
+   "fieldtype": "Link",
+   "label": "Price List",
+   "options": "Price List"
+  },
+  {
+   "fieldname": "section_break_ppyl",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "mode_of_payment_mapping",
+   "fieldtype": "Table",
+   "label": "Mode of Payment Mapping",
+   "options": "Books Payment Methods"
   }
  ],
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-05-03 10:56:20.695747",
+ "modified": "2025-05-09 15:02:11.403272",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
