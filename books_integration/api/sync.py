@@ -152,7 +152,7 @@ def update_status(instance, data):
     return {"success": True}
 
 def get_item_rates():
-    price_list = frappe.db.get_value("Books Sync Settings", "price_list")
+    price_list = frappe.db.get_single_value("Books Sync Settings", "price_list")
     if not price_list:
         return None
     item_price = frappe.qb.DocType("Item Price")
