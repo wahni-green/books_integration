@@ -14,7 +14,7 @@ def get_pending_docs(instance):
     if not item_rates:
         return {
             "success": "false",
-            "message": "price list not selected in Books Item Settings"
+            "message": "price list not selected in Books Sync Settings"
         }
     queued_docs = frappe.db.get_all(
         "Books Sync Queue",
@@ -105,6 +105,11 @@ def initiate_master_sync(instance, records):
 
 @frappe.whitelist(methods=["POST"])
 def sync_transactions(instance, records):
+    if not frappe.db.get_value("Books Sync Settings", "mode_of_payment_mapping"):
+        return {
+        "success": False,
+        "message": "Please Set Mode of Payment Mapping in Books Sync Settings",
+    }
     batches = create_batch(records, 15)
     for batch in batches:
         doc = frappe.new_doc("Books Integration Log")
@@ -147,7 +152,7 @@ def update_status(instance, data):
     return {"success": True}
 
 def get_item_rates():
-    price_list = frappe.db.get_single_value("Books Item Settings", "price_list")
+    price_list = frappe.db.get_value("Books Sync Settings", "price_list")
     if not price_list:
         return None
     item_price = frappe.qb.DocType("Item Price")
