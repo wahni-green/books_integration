@@ -855,18 +855,19 @@ class POSClosingShift(DocConverterBase):
         # remove modes of payment with empty amount
         pop_indexes = []
         for item in self.converted_doc["payment_reconciliation"]:
-            delete_row = 0
+            empty_fields = 0
             amount_keys = list(item.keys())
             amount_keys.pop(0)
             for key in item.keys():
                 if key in amount_keys:
                     if int(item[key]) == 0:
-                        delete_row = 1
-                    else:
-                        delete_row = 0
-            if delete_row:
+                        empty_fields += 1
+            if len(amount_keys) == empty_fields:
+                # check if all 4 amount rows have empty fields
                 # add index of current row to pop_indexes
                 pop_indexes.append(self.converted_doc["payment_reconciliation"].index(item))
+            
+            empty_fields = 0
         
         for index in reversed(pop_indexes):
             self.converted_doc['payment_reconciliation'].pop(index)
