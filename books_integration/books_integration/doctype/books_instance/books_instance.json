@@ -10,7 +10,8 @@
   "device_id",
   "instance_name",
   "column_break_didr",
-  "pos_profile"
+  "pos_profile",
+  "pos_user"
  ],
  "fields": [
   {
@@ -28,7 +29,6 @@
    "fieldtype": "Data",
    "in_list_view": 1,
    "label": "Device ID",
-   "not_nullable": 1,
    "read_only": 1,
    "reqd": 1,
    "unique": 1
@@ -47,11 +47,18 @@
    "fieldtype": "Link",
    "label": "POS Profile",
    "options": "POS Profile"
+  },
+  {
+   "default": "Administrator",
+   "fieldname": "pos_user",
+   "fieldtype": "Link",
+   "label": "POS User",
+   "options": "User"
   }
  ],
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2024-12-19 17:06:08.589574",
+ "modified": "2025-05-10 17:41:21.292497",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Instance",

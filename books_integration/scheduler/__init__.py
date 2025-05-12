@@ -29,10 +29,11 @@ def process_transactions():
 
     frappe.db.set_value("Books Integration Log", log.name, "processed", 1)
     data = json.loads(log.data)
-    sales_invoices = [row for row in data if row.get("doctype") == "SalesInvoice"]
-    other_docs = [row for row in data if row.get("doctype") != "SalesInvoice"]
+    primary_doctypes = ["SalesInvoice", "POSOpeningShift"]
+    primary_docs = [row for row in data if row.get("doctype") in primary_doctypes]
+    secondary_docs = [row for row in data if row.get("doctype") not in primary_doctypes]
     frappe.flags.in_books_process = True
-    for record in sales_invoices+other_docs:
+    for record in primary_docs+secondary_docs:
         try:
             doctype = get_doctype_name(record.get("doctype"), "erpn")
             process_data(log.books_instance, record, doctype)
@@ -99,6 +100,10 @@ def create_record(
     doc.flags.ignore_permissions = True
     doc.run_method("set_missing_values")
     doc.insert()
+    other_docs = ["POS Opening Entry", "POS Closing Entry"]
+
+    if doc.doctype in other_docs:
+        doc.submit()
 
     if submit and doc.meta.is_submittable:
         doc.submit()

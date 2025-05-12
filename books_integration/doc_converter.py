@@ -2,8 +2,11 @@
 # For license information, please see license.txt
 
 import frappe
+from frappe import _
 from frappe.model.document import Document
-from frappe.utils import flt, getdate
+from frappe.utils import (
+    flt, getdate, get_datetime_str, convert_utc_to_system_timezone, get_datetime
+)
 from books_integration.utils import get_doctype_name
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
 from erpnext.accounts.party import get_party_account
@@ -114,6 +117,12 @@ class DocConverterBase:
 
         return frappe.get_doc(self.converted_doc)
 
+    def get_erp_payment_method(self, payment_method):
+        methods = self.settings.get("mode_of_payment_mapping")
+        for pay_method in methods:
+            if pay_method.get("frappebooks_mode_of_payment") == payment_method:
+                return pay_method.get("erpnext_mode_of_payment")
+
 
 def init_doc_converter(instance, doc_dict, target: str):
     doctype = doc_dict.get("doctype")
@@ -158,6 +167,12 @@ def init_doc_converter(instance, doc_dict, target: str):
 
     if doctype == "Address":
         return Address(instance, doc_dict, target)
+
+    if doctype == "POSOpeningShift":
+        return POSOpeningShift(instance, doc_dict, target)
+
+    if doctype == "POSClosingShift":
+        return POSClosingShift(instance, doc_dict, target)
 
     return False
 
@@ -346,7 +361,7 @@ class SalesInvoice(DocConverterBase):
             "Books Instance", self.instance, "pos_profile"
         )
         if not pos_profile:
-            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
     
         pos_details = frappe.db.get_value(
             "POS Profile", pos_profile, ["company", "customer"], as_dict=True
@@ -383,6 +398,7 @@ class PaymentEntry(DocConverterBase):
             "payment_type": "paymentType",
             "mode_of_payment": "paymentMethod",
             "total_allocated_amount": "amount",
+            "reference_no": "referenceId",
             # "paid_to": "paymentAccount",
             "child_tables": [
                 {
@@ -398,6 +414,7 @@ class PaymentEntry(DocConverterBase):
                 },
             ],
         }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
@@ -405,7 +422,7 @@ class PaymentEntry(DocConverterBase):
             "Books Instance", self.instance, "pos_profile"
         )
         if not pos_profile:
-            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
     
         pos_details = frappe.db.get_value(
             "POS Profile", pos_profile, ["company", "customer"], as_dict=True
@@ -413,8 +430,9 @@ class PaymentEntry(DocConverterBase):
         self.converted_doc["company"] = pos_details.get("company")
         self.converted_doc["party"] = pos_details.get("customer")
 
-        if self._dirty_doc.get("paymentMethod") == "Transfer":
-            self.converted_doc["mode_of_payment"] = "Bank Draft"
+        self.converted_doc["mode_of_payment"] = self.get_erp_payment_method(
+            self._dirty_doc.get("paymentMethod")
+        )
 
         is_party_is_customer = frappe.db.exists("Customer", self.converted_doc["party"])
 
@@ -431,10 +449,10 @@ class PaymentEntry(DocConverterBase):
             self.converted_doc["total_allocated_amount"]
         )
 
-        if self.converted_doc['mode_of_payment'] in ['Cash', 'Bank']:
+        if self._dirty_doc['paymentMethod'] in ['Cash', 'Bank']:
             bank = get_default_bank_cash_account(
                 self.converted_doc['company'],
-                self.converted_doc['mode_of_payment'],
+                self._dirty_doc['paymentMethod'],
                 self.converted_doc['mode_of_payment'],
                 account=None
             )
@@ -462,6 +480,9 @@ class PaymentEntry(DocConverterBase):
 
             row["total_amount"] = float(row["total_amount"])
             row["allocated_amount"] = float(row["total_amount"])
+
+        if self.converted_doc["mode_of_payment"] in ["Bank Draft", "Credit Card"]:
+            self.converted_doc["reference_date"] = self.converted_doc["posting_date"]
 
 
 class StockEntry(DocConverterBase):
@@ -708,3 +729,151 @@ class Address(DocConverterBase):
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["address_title"] = self.converted_doc.get("name")
+
+
+class POSOpeningShift(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "period_start_date": "openingDate",
+            "child_tables": [
+                {
+                    "erpn_fieldname": "balance_details",
+                    "fbooks_fieldname": "openingAmounts",
+                    "fbooks_doctype": "openingAmounts",
+                    "erpn_doctype": "POS Opening Entry Detail",
+                    "fieldmap": {
+                        "mode_of_payment": "paymentMethod",
+                        "opening_amount": "amount",
+                    },
+                },
+            ],
+        }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_erpn(self):
+        # set company, cashier, user and pos profile
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, "company", as_dict=True
+        )
+        pos_user = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_user"
+        )
+        if not pos_user:
+            frappe.throw(_(("POS User not set in Books Instance {0}").format(self.instance)))
+        
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc['cashier'] = pos_user
+        self.converted_doc['user'] = pos_user
+        self.converted_doc["period_start_date"] = get_datetime_str(
+            self.converted_doc["period_start_date"]
+        )
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
+        # change fbooks mode of payment to erpn mode of payment
+        for item in self.converted_doc['balance_details']:
+            item["mode_of_payment"] = self.get_erp_payment_method(item.get("mode_of_payment"))
+        
+        # remove modes of payment with empty amount
+        pop_indexes = []
+        for item in self.converted_doc['balance_details']:
+            if int(item.get("opening_amount")) == 0:
+                pop_index = self.converted_doc['balance_details'].index(item)
+                pop_indexes.append(pop_index)
+
+        for index in reversed(pop_indexes):
+            self.converted_doc['balance_details'].pop(index)
+            
+
+class POSClosingShift(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "period_end_date": "closingDate",
+            "pos_opening_entry": "openingShift",
+            "child_tables": [
+                {
+                    "erpn_fieldname": "payment_reconciliation",
+                    "fbooks_fieldname": "closingAmounts",
+                    "fbooks_doctype": "closingAmounts",
+                    "erpn_doctype": "POS Closing Entry Detail",
+                    "fieldmap": {
+                        "mode_of_payment": "paymentMethod",
+                        "opening_amount": "openingAmount",
+                        "closing_amount": "closingAmount",
+                        "expected_amount": "expectedAmount",
+                        "difference": "differenceAmount",
+                    },
+                },
+            ],
+        }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_erpn(self):
+        # set company, cashier, user and pos profile
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
+    
+        pos_details = frappe.db.get_value(
+            "POS Profile", pos_profile, "company", as_dict=True
+        )
+        pos_user = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_user"
+        )
+        if not pos_user:
+            frappe.throw(_(("POS User not set in Books Instance {0}").format(self.instance)))
+
+        self.converted_doc["company"] = pos_details.get("company")
+        self.converted_doc["pos_profile"] = pos_profile
+        self.converted_doc['cashier'] = pos_user
+        self.converted_doc['user'] = pos_user
+        self.converted_doc["period_end_date"] = get_converted_datetime_str(
+            self.converted_doc["period_end_date"]
+        )
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
+        opening_entry = frappe.db.get_value(
+            "Books Reference",
+            {"books_name": self.converted_doc["pos_opening_entry"]},
+            "document_name"
+        )
+        self.converted_doc["pos_opening_entry"] = opening_entry
+
+        for item in self.converted_doc['payment_reconciliation']:
+            item["mode_of_payment"] = self.get_erp_payment_method(item.get("mode_of_payment"))
+
+        # remove modes of payment with empty amount
+        pop_indexes = []
+        for item in self.converted_doc["payment_reconciliation"]:
+            empty_fields = 0
+            amount_keys = list(item.keys())
+            amount_keys.pop(0)
+            for key in item.keys():
+                if key in amount_keys:
+                    if int(item[key]) == 0:
+                        empty_fields += 1
+            if len(amount_keys) == empty_fields:
+                # check if all 4 amount rows have empty fields
+                # add index of current row to pop_indexes
+                pop_indexes.append(self.converted_doc["payment_reconciliation"].index(item))
+            
+            empty_fields = 0
+        
+        for index in reversed(pop_indexes):
+            self.converted_doc['payment_reconciliation'].pop(index)
+        
+
+def get_converted_datetime_str(datetimestr):
+    datetime_obj = get_datetime(datetimestr)
+    datetime = convert_utc_to_system_timezone(datetime_obj)
+    return get_datetime_str(datetime)
