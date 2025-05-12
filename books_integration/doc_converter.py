@@ -762,16 +762,16 @@ class POSOpeningShift(DocConverterBase):
         pos_details = frappe.db.get_value(
             "POS Profile", pos_profile, "company", as_dict=True
         )
-        applicable_for_user = frappe.db.get_value(
-            "POS Profile User", {"parent": pos_profile}, "user"
+        pos_user = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_user"
         )
-        if not applicable_for_user:
-            frappe.throw(_(("Applicable Users not set in POS Profile {0}").format(self.instance)))
+        if not pos_user:
+            frappe.throw(_(("POS User not set in Books Instance {0}").format(self.instance)))
         
         self.converted_doc["company"] = pos_details.get("company")
         self.converted_doc["pos_profile"] = pos_profile
-        self.converted_doc['cashier'] = applicable_for_user
-        self.converted_doc['user'] = applicable_for_user
+        self.converted_doc['cashier'] = pos_user
+        self.converted_doc['user'] = pos_user
         self.converted_doc["period_start_date"] = get_datetime_str(
             self.converted_doc["period_start_date"]
         )
@@ -822,21 +822,21 @@ class POSClosingShift(DocConverterBase):
             "Books Instance", self.instance, "pos_profile"
         )
         if not pos_profile:
-            frappe.throw(("POS Profile not set in Books Instance {0}").format(self.instance))
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
     
         pos_details = frappe.db.get_value(
             "POS Profile", pos_profile, "company", as_dict=True
         )
-        applicable_for_user = frappe.db.get_value(
-            "POS Profile User", {"parent": pos_profile}, "user"
+        pos_user = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_user"
         )
-        if not applicable_for_user:
-            frappe.throw(("Applicable Users not set in POS Profile: {0}").format(pos_profile))
+        if not pos_user:
+            frappe.throw(_(("POS User not set in Books Instance {0}").format(self.instance)))
 
         self.converted_doc["company"] = pos_details.get("company")
         self.converted_doc["pos_profile"] = pos_profile
-        self.converted_doc['cashier'] = applicable_for_user
-        self.converted_doc['user'] = applicable_for_user
+        self.converted_doc['cashier'] = pos_user
+        self.converted_doc['user'] = pos_user
         self.converted_doc["period_end_date"] = get_converted_datetime_str(
             self.converted_doc["period_end_date"]
         )
