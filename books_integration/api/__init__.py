@@ -28,4 +28,15 @@ def register_instance(instance, instance_name=None):
         "instance_name": instance_name or instance
     }).insert(ignore_permissions=True)
 
-    return {"success": True, "message": "Instance registered successfully"}
+    message = {"success": True, "message": "Instance registered successfully"}
+    books_sync_settings = frappe.get_single("Books Sync Settings")
+    mappings = dict(
+        tax_mapping = books_sync_settings.tax_mapping,
+        mode_of_payment_mapping = books_sync_settings.mode_of_payment_mapping
+    )
+    if not mappings.get("mode_of_payment_mapping"):
+        message.setdefault("payment_warning", "Mode of Payment Mapping Not Set in Books Sync Settings(ERPNext)")
+    if not mappings.get("tax_mapping"):
+        message.setdefault("tax_warning", "Tax Mapping Not Set in Books Sync Settings(ERPNext)")
+    
+    return message

@@ -119,6 +119,8 @@ class DocConverterBase:
 
     def get_erp_payment_method(self, payment_method):
         methods = self.settings.get("mode_of_payment_mapping")
+        if not methods:
+            frappe.throw(_("Mode of Payment Mapping Not Set in Books Sync Settings"))
         for pay_method in methods:
             if pay_method.get("frappebooks_mode_of_payment") == payment_method:
                 return pay_method.get("erpnext_mode_of_payment")
