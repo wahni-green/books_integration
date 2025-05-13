@@ -48,6 +48,7 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "Standard Selling",
    "fieldname": "price_list",
    "fieldtype": "Link",
    "label": "Price List",
@@ -67,7 +68,7 @@
  "index_web_pages_for_search": 1,
  "issingle": 1,
  "links": [],
- "modified": "2025-05-09 15:02:11.403272",
+ "modified": "2025-05-13 10:43:48.875112",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Sync Settings",
