@@ -232,6 +232,12 @@ class Item(DocConverterBase):
         if barcodes := self.doc_dict.get("barcodes"):
             self.converted_doc['barcode'] = barcodes[0].get("barcode")
 
+        # return whether UOM must be a whole number
+        uom_whole = frappe.db.get_value("UOM", self.converted_doc["stock_uom"], "must_be_whole_number")
+        if uom_whole:
+            self.converted_doc['isWhole'] = 'true'
+        self.converted_doc['isWhole'] = 'false'
+
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
         self.converted_doc["item_group"] = "Products"
