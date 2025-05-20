@@ -20,7 +20,7 @@ def register_instance(instance, instance_name=None):
         return {"success": False, "message": "Instance name is required"}
 
     if frappe.db.exists("Books Instance", instance):
-        return {"success": False, "message": "Instance already registered"}
+        return {"success": True, "message": "Instance already registered"}
 
     frappe.get_doc({
         "doctype": "Books Instance",

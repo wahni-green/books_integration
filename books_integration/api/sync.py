@@ -138,6 +138,7 @@ def update_status(instance, data):
         "doctype": data.get("doctype"),
         "name": data.get("nameInERPNext"),
         "books_name": data.get("nameInFBooks"),
+        "doc": data.get("doc"),
     }
 
     update_books_reference(instance, ref_data)
