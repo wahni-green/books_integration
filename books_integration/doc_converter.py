@@ -119,6 +119,8 @@ class DocConverterBase:
 
     def get_erp_payment_method(self, payment_method):
         methods = self.settings.get("mode_of_payment_mapping")
+        if not methods:
+            frappe.throw(_("Mode of Payment Mapping Not Set in Books Sync Settings"))
         for pay_method in methods:
             if pay_method.get("frappebooks_mode_of_payment") == payment_method:
                 return pay_method.get("erpnext_mode_of_payment")
@@ -181,7 +183,8 @@ class Item(DocConverterBase):
     def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "image": "image",
-            "item_code": "name",
+            "item_code": "itemCode",
+            "item_name": "name",
             "stock_uom": "unit",
             "description": "description",
             "gst_hsn_code": "hsnCode",
@@ -220,15 +223,26 @@ class Item(DocConverterBase):
         if self.settings.sync_item_as_non_inventory:
             self.converted_doc["trackItem"] = 0
 
-        if not self.doc_dict.get("taxes"):
-            return
+        if self.doc_dict.get("taxes"):
+            self.converted_doc["tax"] = self.get_item_tax_template(
+                self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
+            )
 
-        self.converted_doc["tax"] = self.get_item_tax_template(
-            self.doc_dict.get("taxes")[0]["item_tax_template"], self.target
-        )
         # get barcode
         if barcodes := self.doc_dict.get("barcodes"):
             self.converted_doc['barcode'] = barcodes[0].get("barcode")
+
+        # return whether UOM must be a whole number
+        all_uoms = frappe.db.get_all(
+            "UOM", filters={"must_be_whole_number": 1}, pluck="name"
+        )
+        for row in self.converted_doc["uomConversions"]:
+            if row.get("uom") in all_uoms:
+                row.setdefault("isWhole", True)
+            else:
+                row.setdefault("isWhole", False)
+
+        self.converted_doc["hasBatch"] = bool(self.converted_doc["hasBatch"])
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
@@ -381,6 +395,19 @@ class SalesInvoice(DocConverterBase):
                 item["discount_amount"] = discount_amount
                 item["rate"] = flt(item["price_list_rate"]) - discount_amount
 
+        if self.converted_doc["return_against"]:
+            self.converted_doc["is_return"] = 1
+            self.converted_doc["update_outstanding_for_self"] = 1
+            self.converted_doc["update_billed_amount_in_delivery_note"] = 1
+            erpn_invoice = frappe.db.get_value(
+                "Books Reference",
+                {"books_name": self.converted_doc["return_against"]},
+                "document_name"
+            )
+            self.converted_doc["return_against"] = erpn_invoice
+        
+
+
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
             self.converted_doc["submitted"] = True
@@ -399,6 +426,7 @@ class PaymentEntry(DocConverterBase):
             "mode_of_payment": "paymentMethod",
             "total_allocated_amount": "amount",
             "reference_no": "referenceId",
+            "reference_date": "clearanceDate",
             # "paid_to": "paymentAccount",
             "child_tables": [
                 {
@@ -449,7 +477,7 @@ class PaymentEntry(DocConverterBase):
             self.converted_doc["total_allocated_amount"]
         )
 
-        if self._dirty_doc['paymentMethod'] in ['Cash', 'Bank']:
+        if self._dirty_doc['paymentMethod'] in ['Cash', 'Bank', 'Transfer']:
             bank = get_default_bank_cash_account(
                 self.converted_doc['company'],
                 self._dirty_doc['paymentMethod'],
@@ -464,6 +492,9 @@ class PaymentEntry(DocConverterBase):
 
         self.converted_doc["posting_date"] = getdate(
             self.converted_doc["posting_date"]
+        )
+        self.converted_doc["reference_date"] = getdate(
+            self.converted_doc["reference_date"]
         )
 
         for row in self.converted_doc["references"]:
@@ -480,9 +511,6 @@ class PaymentEntry(DocConverterBase):
 
             row["total_amount"] = float(row["total_amount"])
             row["allocated_amount"] = float(row["total_amount"])
-
-        if self.converted_doc["mode_of_payment"] in ["Bank Draft", "Credit Card"]:
-            self.converted_doc["reference_date"] = self.converted_doc["posting_date"]
 
 
 class StockEntry(DocConverterBase):
@@ -615,10 +643,16 @@ class Batch(DocConverterBase):
     def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "batch_id": "name",
+            "item": "item",
             "expiry_date": "expiryDate",
             "manufacturing_date": "manufactureDate",
         }
         super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_fbooks(self):
+        self.converted_doc["item"] = frappe.db.get_value(
+            "Item", self.converted_doc["item"], "item_name"
+        )
 
 
 class UOM(DocConverterBase):

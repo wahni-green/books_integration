@@ -52,7 +52,7 @@ def update_books_reference(instance, reference):
         "Books Reference",
         {
             "document_type": doctype,
-            "document_name": reference.get("name"),
+            "document_name": reference.get("doc").get("itemCode") if doctype == "Item" else reference.get("name"),
             "books_instance": instance,
         },
         ["books_name", "name"],
@@ -64,7 +64,7 @@ def update_books_reference(instance, reference):
             {
                 "doctype": "Books Reference",
                 "document_type": doctype,
-                "document_name": reference.get("name"),
+                "document_name": reference.get("doc").get("itemCode") if doctype == "Item" else reference.get("name"),
                 "books_instance": instance,
                 "books_name": reference.get("books_name"),
             },

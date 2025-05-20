@@ -105,7 +105,8 @@ def initiate_master_sync(instance, records):
 
 @frappe.whitelist(methods=["POST"])
 def sync_transactions(instance, records):
-    if not frappe.db.get_value("Books Sync Settings", "mode_of_payment_mapping"):
+    settings = frappe.get_doc("Books Sync Settings")
+    if not settings.get("mode_of_payment_mapping"):
         return {
         "success": False,
         "message": "Please Set Mode of Payment Mapping in Books Sync Settings",
@@ -137,6 +138,7 @@ def update_status(instance, data):
         "doctype": data.get("doctype"),
         "name": data.get("nameInERPNext"),
         "books_name": data.get("nameInFBooks"),
+        "doc": data.get("doc"),
     }
 
     update_books_reference(instance, ref_data)
