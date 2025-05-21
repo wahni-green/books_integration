@@ -348,7 +348,7 @@ class SalesInvoice(DocConverterBase):
                     "fbooks_doctype": "SalesInvoiceItem",
                     "erpn_doctype": "Sales Invoice Item",
                     "fieldmap": {
-                        "item_code": "item",
+                        "item_code": "itemCode",
                         "description": "description",
                         "qty": "quantity",
                         "stock_uom": "unit",
@@ -395,6 +395,9 @@ class SalesInvoice(DocConverterBase):
                 item["discount_amount"] = discount_amount
                 item["rate"] = flt(item["price_list_rate"]) - discount_amount
 
+            if item.get("batch_no"):
+                item.setdefault("use_serial_batch_fields", 1)
+
         if self.converted_doc["return_against"]:
             self.converted_doc["is_return"] = 1
             self.converted_doc["update_outstanding_for_self"] = 1
@@ -405,8 +408,6 @@ class SalesInvoice(DocConverterBase):
                 "document_name"
             )
             self.converted_doc["return_against"] = erpn_invoice
-        
-
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
