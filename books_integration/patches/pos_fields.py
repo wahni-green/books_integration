@@ -39,5 +39,21 @@ def execute():
                     "read_only": 1,
                 },
             ],
+            "Sales Invoice": [
+                {
+                    "fieldname": "from_frappebooks",
+                    "label": "From FrappeBooks",
+                    "fieldtype": "Check",
+                    "insert_after": "customer",
+                },
+                {
+                    "fieldname": "books_instance",
+                    "label": "Books Instance",
+                    "fieldtype": "Link",
+                    "options": "Books Instance",
+                    "insert_after": "from_frappebooks",
+                    "read_only": 1,
+                },
+            ]
         }
     )
