@@ -78,6 +78,7 @@ def process_data(instance, data, doctype):
     _doc = frappe.get_doc(doctype, ref_exists)
     _doc.update(conv_doc.get_converted_doc())
     _doc.flags.ignore_permissions = True
+    _doc.run_method("set_missing_values")
     _doc.save()
 
     if (

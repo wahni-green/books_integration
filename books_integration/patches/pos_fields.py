@@ -13,6 +13,7 @@ def execute():
                     "label": "From FrappeBooks",
                     "fieldtype": "Check",
                     "insert_after": "period_end_date",
+                    "read_only": 0,
                 },
                 {
                     "fieldname": "books_instance",
@@ -29,6 +30,7 @@ def execute():
                     "label": "From FrappeBooks",
                     "fieldtype": "Check",
                     "insert_after": "period_end_date",
+                    "read_only": 0,
                 },
                 {
                     "fieldname": "books_instance",
@@ -45,6 +47,24 @@ def execute():
                     "label": "From FrappeBooks",
                     "fieldtype": "Check",
                     "insert_after": "customer",
+                    "read_only": 0,
+                },
+                {
+                    "fieldname": "books_instance",
+                    "label": "Books Instance",
+                    "fieldtype": "Link",
+                    "options": "Books Instance",
+                    "insert_after": "from_frappebooks",
+                    "read_only": 1,
+                },
+            ],
+            "Payment Entry": [
+                {
+                    "fieldname": "from_frappebooks",
+                    "label": "From FrappeBooks",
+                    "fieldtype": "Check",
+                    "insert_after": "payment_type",
+                    "read_only": 0,
                 },
                 {
                     "fieldname": "books_instance",

@@ -363,6 +363,7 @@ class SalesInvoice(DocConverterBase):
                 },
             ],
         }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
@@ -408,6 +409,9 @@ class SalesInvoice(DocConverterBase):
                 "document_name"
             )
             self.converted_doc["return_against"] = erpn_invoice
+
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
@@ -512,6 +516,9 @@ class PaymentEntry(DocConverterBase):
 
             row["total_amount"] = float(row["total_amount"])
             row["allocated_amount"] = float(row["total_amount"])
+    
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
 
 
 class StockEntry(DocConverterBase):
