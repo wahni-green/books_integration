@@ -60,6 +60,7 @@ def process_data(instance, data, doctype):
         {
             "document_type": doctype,
             "books_name": data.get("name"),
+            "books_instance": instance
         },
         "document_name"
     )
