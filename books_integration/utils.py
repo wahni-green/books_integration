@@ -22,6 +22,7 @@ ERP_DOCTYPE_MAP = {
     "Address": "Address",
     "POS Opening Entry": "POSOpeningShift",
     "POS Closing Entry": "POSClosingShift",
+    "Pricing Rule": "PricingRule",
 }
 
 BOOKS_DOCTYPE_MAP = {v: k for k, v in ERP_DOCTYPE_MAP.items()}

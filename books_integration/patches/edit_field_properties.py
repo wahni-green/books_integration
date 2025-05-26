@@ -11,6 +11,12 @@ def execute():
             "property": "default",
             "value":"Unit"
         },
+        {
+            "doctype": "Pricing Rule",
+            "fieldname": "for_price_list",
+            "property": "default",
+            "value":"Standard Selling"
+        },
     ]
 
     for property in property_list:

@@ -5,8 +5,6 @@
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
-  "enabled",
-  "section_break_gejx",
   "device_id",
   "instance_name",
   "column_break_didr",
@@ -14,16 +12,6 @@
   "pos_user"
  ],
  "fields": [
-  {
-   "default": "0",
-   "fieldname": "enabled",
-   "fieldtype": "Check",
-   "label": "Enabled"
-  },
-  {
-   "fieldname": "section_break_gejx",
-   "fieldtype": "Section Break"
-  },
   {
    "fieldname": "device_id",
    "fieldtype": "Data",
@@ -56,9 +44,10 @@
    "options": "User"
   }
  ],
+ "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-05-10 17:41:21.292497",
+ "modified": "2025-05-22 12:07:07.224924",
  "modified_by": "Administrator",
  "module": "Books Integration",
  "name": "Books Instance",
@@ -78,6 +67,7 @@
    "write": 1
   }
  ],
+ "row_format": "Dynamic",
  "sort_field": "creation",
  "sort_order": "DESC",
  "states": []

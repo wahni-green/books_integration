@@ -1,2 +1,2 @@
 books_integration.patches.pos_fields #6
-books_integration.patches.edit_field_properties #1
+books_integration.patches.edit_field_properties #2
