@@ -525,7 +525,11 @@ class PaymentEntry(DocConverterBase):
             # check if sales invoice is returned
             if frappe.db.get_value("Sales Invoice", row["reference_name"], "return_against"):
                 self.converted_doc["payment_type"] = "Pay"
-                self.converted_doc["paid_to"] = get_account("Receivable", self.converted_doc['company'])
+                # swap paid from and paid to
+                temp = self.converted_doc["paid_from"]
+                self.converted_doc["paid_from"] = self.converted_doc["paid_to"]
+                self.converted_doc["paid_to"] = temp
+                
     
         self.converted_doc['books_instance'] = self.instance
         self.converted_doc['from_frappebooks'] = 1
