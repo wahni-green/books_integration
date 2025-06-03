@@ -145,7 +145,8 @@ doc_events = {
         "autoname": "books_integration.overrides.item_naming.autoname",
     },
     "Item Price": {"on_update": "books_integration.sync_queue.add_item"},
-    "Batch": {"on_update": "books_integration.sync_queue.add_doc_to_sync_queue"}
+    "Batch": {"on_update": "books_integration.sync_queue.add_doc_to_sync_queue"},
+    # "Pricing Rule": {"on_update": "books_integration.sync_queue.add_doc_to_sync_queue"},
 }
 
 # Scheduled Tasks

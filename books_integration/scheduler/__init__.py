@@ -4,7 +4,7 @@
 import frappe
 import json
 from books_integration.doc_converter import init_doc_converter
-from books_integration.utils import get_doctype_name, update_books_reference
+from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
 
 
 def enqueue_process_transactions():
@@ -41,7 +41,7 @@ def process_transactions():
             frappe.get_doc({
                 "doctype": "Books Error Log",
                 "error": frappe.get_traceback(),
-                "data": record,
+                "data": pretty_json(record),
                 "document_type": doctype,
                 "books_instance": log.books_instance,
                 "books_integration_log": log.name
@@ -60,6 +60,7 @@ def process_data(instance, data, doctype):
         {
             "document_type": doctype,
             "books_name": data.get("name"),
+            "books_instance": instance
         },
         "document_name"
     )
@@ -78,6 +79,7 @@ def process_data(instance, data, doctype):
     _doc = frappe.get_doc(doctype, ref_exists)
     _doc.update(conv_doc.get_converted_doc())
     _doc.flags.ignore_permissions = True
+    _doc.run_method("set_missing_values")
     _doc.save()
 
     if (

@@ -10,6 +10,7 @@ from frappe.utils import (
 from books_integration.utils import get_doctype_name
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
 from erpnext.accounts.party import get_party_account
+from erpnext.setup.setup_wizard.data.dashboard_charts import get_account
 
 
 class DocConverterBase:
@@ -124,6 +125,7 @@ class DocConverterBase:
         for pay_method in methods:
             if pay_method.get("frappebooks_mode_of_payment") == payment_method:
                 return pay_method.get("erpnext_mode_of_payment")
+        frappe.throw(_("Mode of Payment Not Mapped"))
 
 
 def init_doc_converter(instance, doc_dict, target: str):
@@ -175,6 +177,9 @@ def init_doc_converter(instance, doc_dict, target: str):
 
     if doctype == "POSClosingShift":
         return POSClosingShift(instance, doc_dict, target)
+
+    if doctype == "Pricing Rule":
+        return PricingRule(instance, doc_dict, target)
 
     return False
 
@@ -348,7 +353,7 @@ class SalesInvoice(DocConverterBase):
                     "fbooks_doctype": "SalesInvoiceItem",
                     "erpn_doctype": "Sales Invoice Item",
                     "fieldmap": {
-                        "item_code": "item",
+                        "item_code": "itemCode",
                         "description": "description",
                         "qty": "quantity",
                         "stock_uom": "unit",
@@ -363,6 +368,7 @@ class SalesInvoice(DocConverterBase):
                 },
             ],
         }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_erpn(self):
@@ -395,6 +401,9 @@ class SalesInvoice(DocConverterBase):
                 item["discount_amount"] = discount_amount
                 item["rate"] = flt(item["price_list_rate"]) - discount_amount
 
+            if item.get("batch_no"):
+                item.setdefault("use_serial_batch_fields", 1)
+
         if self.converted_doc["return_against"]:
             self.converted_doc["is_return"] = 1
             self.converted_doc["update_outstanding_for_self"] = 1
@@ -405,8 +414,9 @@ class SalesInvoice(DocConverterBase):
                 "document_name"
             )
             self.converted_doc["return_against"] = erpn_invoice
-        
 
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
@@ -511,6 +521,18 @@ class PaymentEntry(DocConverterBase):
 
             row["total_amount"] = float(row["total_amount"])
             row["allocated_amount"] = float(row["total_amount"])
+
+            # check if sales invoice is returned
+            if frappe.db.get_value("Sales Invoice", row["reference_name"], "return_against"):
+                self.converted_doc["payment_type"] = "Pay"
+                # swap paid from and paid to
+                temp = self.converted_doc["paid_from"]
+                self.converted_doc["paid_from"] = self.converted_doc["paid_to"]
+                self.converted_doc["paid_to"] = temp
+                
+    
+        self.converted_doc['books_instance'] = self.instance
+        self.converted_doc['from_frappebooks'] = 1
 
 
 class StockEntry(DocConverterBase):
@@ -820,7 +842,8 @@ class POSOpeningShift(DocConverterBase):
         for item in self.converted_doc['balance_details']:
             if int(item.get("opening_amount")) == 0:
                 pop_index = self.converted_doc['balance_details'].index(item)
-                pop_indexes.append(pop_index)
+                if pop_index != 0:
+                    pop_indexes.append(pop_index)
 
         for index in reversed(pop_indexes):
             self.converted_doc['balance_details'].pop(index)
@@ -905,9 +928,95 @@ class POSClosingShift(DocConverterBase):
         
         for index in reversed(pop_indexes):
             self.converted_doc['payment_reconciliation'].pop(index)
-        
+
+
+class PricingRule(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "title": "title",
+            "price_or_product_discount": "discountType",
+            "coupon_code_based": "isCouponCodeBased",
+            "apply_multiple_pricing_rules": "isMultiple",
+            "priority": "priority",
+            "rate_or_discount": "priceDiscountType",
+            "rate": "discountRate",
+            "discount_percentage": "discountPercentage",
+            "discount_amount": "discountAmount",
+            "free_item": "freeItem",
+            "free_qty": "freeItemQuantity",
+            "free_item_uom": "freeItemUnit",
+            "round_free_qty": "roundFreeItemQty",
+            "is_recursive": "isRecursive",
+            "recurse_for": "recurseEvery",
+            "valid_from": "validFrom",
+            "valid_upto": "validTo",
+            "free_item_rate": "freeItemRate",
+            "min_qty": "minQuantity",
+            "max_qty": "maxQuantity",
+            "min_amt": "minAmount",
+            "max_amt": "maxAmount",
+            "child_tables": [
+                {
+                    "erpn_fieldname": "items",
+                    "fbooks_fieldname": "appliedItems",
+                    "fbooks_doctype": "PricingRuleItem",
+                    "erpn_doctype": "Pricing Rule Item Code",
+                    "fieldmap": {
+                        "item_code": "item",
+                        "uom": "unit",
+                    },
+                },
+            ],
+        }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_erpn(self):
+        return
+        self.converted_doc["apply_on"] = "Item Code"
+        self.converted_doc["has_priority"] = 1
+        self.converted_doc["selling"] = 1
+        self.converted_doc["applicable_for"] = "Customer"
+        self.converted_doc["for_price_list"] = self.settings.get("price_list")
+
+        pos_profile = frappe.db.get_value(
+            "Books Instance", self.instance, "pos_profile"
+        )
+        if not pos_profile:
+            frappe.throw(_(("POS Profile not set in Books Instance {0}").format(self.instance)))
+    
+        customer = frappe.db.get_value(
+            "POS Profile", pos_profile, "customer"
+        )
+        self.converted_doc["customer"] = customer
+
+        self.converted_doc["items"] = convert_to_item_name(self.converted_doc["items"])
+
+    def _fill_missing_values_for_fbooks(self):
+        self.converted_doc["isEnabled"] = 0 if self.doc_dict.get("disable") == 1 else 1
+        # change item_code to item_name
+        self.converted_doc["appliedItems"] = convert_to_item_name(
+            self.converted_doc["appliedItems"]
+        )
+
+                
 
 def get_converted_datetime_str(datetimestr):
     datetime_obj = get_datetime(datetimestr)
     datetime = convert_utc_to_system_timezone(datetime_obj)
     return get_datetime_str(datetime)
+
+# change item_code to item_name for erpnext
+def convert_to_item_name(item_list):
+    all_items = frappe.db.get_all("Item", fields=["item_code", "item_name"])
+    item_dict = {}
+    for item in all_items:
+        key = item.get("item_code")
+        value = item.get("item_name")
+        item_dict.setdefault(key, value)
+    
+    for row in item_list:
+        row["item"] = item_dict.get(row["item"])
+
+    return item_list
+    

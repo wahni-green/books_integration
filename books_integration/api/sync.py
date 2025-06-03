@@ -13,7 +13,7 @@ def get_pending_docs(instance):
     item_rates = get_item_rates()
     if not item_rates:
         return {
-            "success": "false",
+            "success": False,
             "message": "price list not selected in Books Sync Settings"
         }
     queued_docs = frappe.db.get_all(
@@ -50,7 +50,7 @@ def get_pending_docs(instance):
 
         compatable_doc["books_sync_id"] = queued_doc.name
         if compatable_doc.get("doctype") == "Item":
-            compatable_doc["rate"] = item_rates.get(compatable_doc.get("name"), 0)
+            compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
         docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
