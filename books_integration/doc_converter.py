@@ -363,8 +363,8 @@ class SalesInvoice(DocConverterBase):
                     / 100
                 )
 
-                item["discount_amount"] = discount_amount
-                item["rate"] = flt(item["price_list_rate"]) - discount_amount
+                item["discount_amount"] = flt(discount_amount)
+                item["rate"] = flt(item["price_list_rate"]) - item.get("discount_amount", 0)
 
     def _fill_missing_values_for_fbooks(self):
         if self._dirty_doc.get("docstatus") == 2:
