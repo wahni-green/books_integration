@@ -127,6 +127,19 @@ class DocConverterBase:
                 return pay_method.get("erpnext_mode_of_payment")
         frappe.throw(_("Mode of Payment Not Mapped"))
 
+    def get_item_tax_template(self, name: str, target: str):
+        templates_map = {}
+
+        sfield = "erpn_tax_template"
+        tfield = "books_tax_template"
+        if target == "erpn":
+            sfield, tfield = tfield, sfield
+
+        for row in (self.settings.get("tax_mapping") or []):
+            templates_map[row.get(sfield)] = row.get(tfield)
+
+        return templates_map.get(name)
+
 
 def init_doc_converter(instance, doc_dict, target: str):
     doctype = doc_dict.get("doctype")
@@ -181,6 +194,8 @@ def init_doc_converter(instance, doc_dict, target: str):
     if doctype == "Pricing Rule":
         return PricingRule(instance, doc_dict, target)
 
+    if doctype == "Item Group":
+        return ItemGroup(instance, doc_dict, target)
     return False
 
 
@@ -210,18 +225,6 @@ class Item(DocConverterBase):
         self.settings = frappe.get_cached_doc("Books Sync Settings")
         super().__init__(instance, dirty_doc, target)
 
-    def get_item_tax_template(self, name: str, target: str):
-        templates_map = {}
-
-        sfield = "erpn_tax_template"
-        tfield = "books_tax_template"
-        if target == "erpn":
-            sfield, tfield = tfield, sfield
-
-        for row in (self.settings.get("tax_mapping") or []):
-            templates_map[row.get(sfield)] = row.get(tfield)
-
-        return templates_map.get(name)
 
     def _fill_missing_values_for_fbooks(self):
         # self.converted_doc["rate"] = item_rate
@@ -248,6 +251,9 @@ class Item(DocConverterBase):
                 row.setdefault("isWhole", False)
 
         self.converted_doc["hasBatch"] = bool(self.converted_doc["hasBatch"])
+
+        self.converted_doc["itemGroup"] = self.doc_dict.get("item_group")
+        
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
@@ -392,14 +398,16 @@ class SalesInvoice(DocConverterBase):
         self.converted_doc["customer"] = pos_details.get("customer")
 
         for item in self.converted_doc["items"]:
+            discount_amount = 0
             if flt(item.get("discount_percentage")) > 0:
                 discount_amount = flt(
                     (flt(item.get("price_list_rate")) * flt(item.get("discount_percentage")))
                     / 100
                 )
-
-                item["discount_amount"] = discount_amount
-                item["rate"] = flt(item["price_list_rate"]) - discount_amount
+            elif flt(item.get("discount_amount")):
+                item["discount_percentage"] = (flt(discount_amount)/ flt(item.get("price_list_rate"))) * 100
+                
+            item["rate"] = flt(item["price_list_rate"]) - flt(item.get("discount_amount", 0))
 
             if item.get("batch_no"):
                 item.setdefault("use_serial_batch_fields", 1)
@@ -999,7 +1007,50 @@ class PricingRule(DocConverterBase):
             self.converted_doc["appliedItems"]
         )
 
-                
+        self.converted_doc["fbooksDocName"] = self.converted_doc["title"]
+
+        if self.converted_doc["discountType"] == "Price":
+            self.converted_doc["discountType"] = "Price Discount"
+        elif self.converted_doc["discountType"] == "Product":
+            self.converted_doc["discountType"] = "Product Discount"
+
+        if self.converted_doc["priceDiscountType"] == "Discount Percentage":
+            self.converted_doc["priceDiscountType"] = "percentage"
+        elif self.converted_doc["priceDiscountType"] == "Discount Amount":
+            self.converted_doc["priceDiscountType"] = "amount"
+        elif self.converted_doc["priceDiscountType"] == "Rate":
+            self.converted_doc["priceDiscountType"] = "rate"
+        # return fbooks name if available
+        existing_ref = frappe.db.get_all(
+            "Books Reference",
+            filters={
+                "document_name": self.doc_dict.get("name"),
+                "document_type": "Pricing Rule",
+                "books_instance": self.instance,
+            },
+            fields=["books_name"],
+            pluck="books_name",
+        )
+
+        self.converted_doc["fbooksDocName"] = existing_ref[0] if existing_ref else self.doc_dict.get("books_name")
+        self.converted_doc["erpnextDocName"] = self.doc_dict.get("name")
+
+class ItemGroup(DocConverterBase):
+    def __init__(self, instance, dirty_doc, target):
+        self.field_map = {
+            "name": "name",
+            "gst_hsn_code": "hsnCode",
+        }
+        self.settings = frappe.get_cached_doc("Books Sync Settings")
+        super().__init__(instance, dirty_doc, target)
+
+    def _fill_missing_values_for_fbooks(self):
+        if self.doc_dict.taxes and self.doc_dict.taxes[0]:
+            tax = self.get_item_tax_template(
+                self.doc_dict.taxes[0].get("item_tax_template"), self.target
+            )
+            self.converted_doc["tax"] = tax
+
 
 def get_converted_datetime_str(datetimestr):
     datetime_obj = get_datetime(datetimestr)
