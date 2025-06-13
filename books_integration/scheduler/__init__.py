@@ -29,7 +29,7 @@ def process_transactions():
 
     frappe.db.set_value("Books Integration Log", log.name, "processed", 1)
     data = json.loads(log.data)
-    primary_doctypes = ["SalesInvoice", "POSOpeningShift"]
+    primary_doctypes = ["SalesInvoice", "POSOpeningShift", "ItemGroup"]
     primary_docs = [row for row in data if row.get("doctype") in primary_doctypes]
     secondary_docs = [row for row in data if row.get("doctype") not in primary_doctypes]
     frappe.flags.in_books_process = True
