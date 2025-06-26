@@ -398,14 +398,14 @@ class SalesInvoice(DocConverterBase):
         self.converted_doc["customer"] = pos_details.get("customer")
 
         for item in self.converted_doc["items"]:
-            discount_amount = 0
+            item["price_list_rate"] = flt(item.get("price_list_rate"))
             if flt(item.get("discount_percentage")) > 0:
-                discount_amount = flt(
+                item["discount_amount"] = flt(
                     (flt(item.get("price_list_rate")) * flt(item.get("discount_percentage")))
                     / 100
                 )
             elif flt(item.get("discount_amount")):
-                item["discount_percentage"] = (flt(discount_amount)/ flt(item.get("price_list_rate"))) * 100
+                item["discount_percentage"] = (flt(item.get("discount_amount"))/ flt(item.get("price_list_rate"))) * 100
                 
             item["rate"] = flt(item["price_list_rate"]) - flt(item.get("discount_amount", 0))
 
@@ -537,8 +537,9 @@ class PaymentEntry(DocConverterBase):
                 temp = self.converted_doc["paid_from"]
                 self.converted_doc["paid_from"] = self.converted_doc["paid_to"]
                 self.converted_doc["paid_to"] = temp
-                
-    
+                if row["allocated_amount"] > 0:
+                    row["allocated_amount"] = -row.get("allocated_amount")
+
         self.converted_doc['books_instance'] = self.instance
         self.converted_doc['from_frappebooks'] = 1
 
