@@ -33,7 +33,7 @@ def get_pending_docs(instance):
         existing_books_ref = frappe.db.get_value(
             "Books Reference",
             {
-                "document_type": queued_doc.doctype_name,
+                "document_type": queued_doc.document_type,
                 "document_name": queued_doc.document_name,
             },
             "books_name"
@@ -51,6 +51,41 @@ def get_pending_docs(instance):
         compatable_doc["books_sync_id"] = queued_doc.name
         if compatable_doc.get("doctype") == "Item":
             compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+            item_group_name = frappe.db.get_value("Item", doc.name, "item_group")
+            if item_group_name:
+                if not frappe.db.exists("Books Reference", {
+                    "document_type": "Item Group",
+                    "document_name": item_group_name,
+                    "books_instance": instance
+                }):
+                    item_group_doc = frappe.get_doc("Item Group", item_group_name)
+                    item_group_converter = init_doc_converter(
+                        queued_doc.books_instance, item_group_doc, "fbooks"
+                    )
+                    if item_group_converter:
+                        item_group_compatable = item_group_converter.get_converted_doc()
+                        item_group_compatable["books_sync_id"] = queued_doc.name
+                        docs.append(item_group_compatable)
+
+        elif compatable_doc.get("doctype") == "Batch":
+            batch_item = frappe.db.get_value("Batch", doc.name, "item")
+            if batch_item:
+
+                if not frappe.db.exists("Books Reference", {
+                    "document_type": "Item",
+                    "document_name": batch_item,
+                    "books_instance": instance
+                }):
+                    item_doc = frappe.get_doc("Item", batch_item)
+                    item_converter = init_doc_converter(
+                        queued_doc.books_instance, item_doc, "fbooks"
+                    )
+                    if item_converter:
+                        item_compatable = item_converter.get_converted_doc()
+                        item_compatable["books_sync_id"] = queued_doc.name
+                        item_compatable["rate"] = item_rates.get(item_compatable.get("itemCode"), 0)
+                        docs.append(item_compatable)
+
         docs.append(compatable_doc)
 
     return {"success": True, "data": docs}

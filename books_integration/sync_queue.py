@@ -39,16 +39,27 @@ def add_doc_to_sync_queue(doc, method=None):
             ).insert()
 
         if doc.doctype == "Item":
-            item_batches = frappe.db.get_all("Batch", {"item": doc.name}, "name")
+            item_batches = frappe.db.get_all("Batch", {"item": doc.name}, ["name", "batch_id"])
             for batch in item_batches:
-                frappe.get_doc(
+                is_batch_exists = frappe.db.exists(
                     {
                         "doctype": "Books Sync Queue",
                         "document_name": batch.get("name"),
                         "document_type": "Batch",
                         "books_instance": instance,
                     }
-                ).insert()
+                )
+
+              
+                if not is_batch_exists and batch.get("batch_id"):
+                    frappe.get_doc(
+                        {
+                            "doctype": "Books Sync Queue",
+                            "document_name": batch.get("name"),
+                            "document_type": "Batch",
+                            "books_instance": instance,
+                        }
+                    ).insert()
 
 
 def document_should_sync(doctype):
