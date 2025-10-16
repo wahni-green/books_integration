@@ -20,35 +20,38 @@ def add_doc_to_sync_queue(doc, method=None):
         pluck="name",
     )
     for instance in instances:
-        is_exists_in_queue = frappe.db.exists(
-            {
-                "doctype": "Books Sync Queue",
-                "document_name": doc.name,
-                "document_type": doc.doctype,
-                "books_instance": instance,
-            }
-        )
-        if not is_exists_in_queue:
-            frappe.get_doc(
-                {
-                    "doctype": "Books Sync Queue",
-                    "document_name": doc.name,
-                    "document_type": doc.doctype,
-                    "books_instance": instance,
-                }
-            ).insert()
+        add_to_queue_if_not_exists(
+            doc.doctype, doc.name, instance)
 
         if doc.doctype == "Item":
-            item_batches = frappe.db.get_all("Batch", {"item": doc.name}, "name")
-            for batch in item_batches:
-                frappe.get_doc(
-                    {
-                        "doctype": "Books Sync Queue",
-                        "document_name": batch.get("name"),
-                        "document_type": "Batch",
-                        "books_instance": instance,
-                    }
-                ).insert()
+            add_item_related_docs(doc, instance)
+
+def add_item_related_docs(doc, instance):
+    item_batches = frappe.db.get_all("Batch", {"item": doc.name}, "name")
+    for batch in item_batches:
+        add_to_queue_if_not_exists("Batch", batch.get("name"), instance)
+
+    if doc.item_group:
+        add_to_queue_if_not_exists("Item Group", doc.item_group, instance)
+
+
+def add_to_queue_if_not_exists(doctype, docname, instance):
+    if not frappe.db.exists(
+        {
+            "doctype": "Books Sync Queue",
+            "document_name": docname,
+            "document_type": doctype,
+            "books_instance": instance,
+        }
+    ):
+        frappe.get_doc(
+            {
+                "doctype": "Books Sync Queue",
+                "document_name": docname,
+                "document_type": doctype,
+                "books_instance": instance,
+            }
+        ).insert()
 
 
 def document_should_sync(doctype):
