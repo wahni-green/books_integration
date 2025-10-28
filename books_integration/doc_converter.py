@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 from frappe.utils import (
-    flt, getdate, get_datetime_str, convert_utc_to_system_timezone, get_datetime
+    flt, getdate, get_datetime_str, convert_utc_to_system_timezone, get_datetime, get_url
 )
 from books_integration.utils import get_doctype_name
 from erpnext.accounts.doctype.journal_entry.journal_entry import get_default_bank_cash_account
@@ -1046,6 +1046,9 @@ class ItemGroup(DocConverterBase):
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_fbooks(self):
+        if self.doc_dict.get("image"):
+            self.converted_doc["image"] = get_url() + self.doc_dict.get("image")
+
         if self.doc_dict.taxes and self.doc_dict.taxes[0]:
             tax = self.get_item_tax_template(
                 self.doc_dict.taxes[0].get("item_tax_template"), self.target
