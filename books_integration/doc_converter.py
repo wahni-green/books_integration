@@ -1049,6 +1049,9 @@ class ItemGroup(DocConverterBase):
         super().__init__(instance, dirty_doc, target)
 
     def _fill_missing_values_for_fbooks(self):
+        if self.doc_dict.get("image"):
+            self.converted_doc["image"] = get_url() + self.doc_dict.get("image")
+
         if self.doc_dict.taxes and self.doc_dict.taxes[0]:
             tax = self.get_item_tax_template(
                 self.doc_dict.taxes[0].get("item_tax_template"), self.target
