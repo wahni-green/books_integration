@@ -212,6 +212,7 @@ class Item(DocConverterBase):
             "is_stock_item": "trackItem",
             "has_batch_no": "hasBatch",
             "has_serial_no": "hasSerialNumber",
+            "item_group": "itemGroup",
             "child_tables": [
                 {
                     "erpn_fieldname": "uoms",
@@ -257,7 +258,9 @@ class Item(DocConverterBase):
 
     def _fill_missing_values_for_erpn(self):
         self.converted_doc["name"] = self._dirty_doc.get("name")
-        self.converted_doc["item_group"] = "Products"
+        
+        if not self.converted_doc.get("item_group"):
+            self.converted_doc["item_group"] = "Products"
 
         if self._dirty_doc["tax"]:
             self.converted_doc["taxes"] = []
@@ -619,28 +622,59 @@ class PriceList(DocConverterBase):
     def __init__(self, instance, dirty_doc, target):
         self.field_map = {
             "name": "name",
-            "enabled": "isEnabled",
             "price_list_name": "name",
+            "enabled": "isEnabled",
             "buying": "isPurchase",
-            "selling": "isSelling",
-            "child_tables": [
-                {
-                    "erpn_fieldname": "",
-                    "fbooks_fieldname": "priceListItem",
-                    "fbooks_doctype": "PriceListItem",
-                    "erpn_doctype": "Item Price",
-                    "fieldmap": {
-                        "name": "name",
-                        "item_code": "item",
-                        "uom": "unit",
-                        "price_list": "parent",
-                        "price_list_rate": "rate",
-                    },
-                }
-            ],
+            "selling": "isSales",
+            "currency": "currency",
         }
         super().__init__(instance, dirty_doc, target)
 
+    def _fill_missing_values_for_fbooks(self):
+        """Convert ERPNext Price List to FrappeBooks format"""
+        item_prices = frappe.get_all(
+            "Item Price",
+            filters={
+                "price_list": self.doc_dict.get("name"),
+            },
+            fields=["item_code", "uom", "price_list_rate", "name"]
+        )
+        
+        self.converted_doc["priceListItem"] = []
+        for item_price in item_prices:
+            item_name = frappe.db.get_value("Item", item_price.get("item_code"), "item_name")
+            
+            exists = False
+            for existing_item in self.converted_doc["priceListItem"]:
+                if (existing_item.get("item") == item_name and 
+                    existing_item.get("unit") == item_price.get("uom")):
+                    exists = True
+                    break
+            
+            if not exists and item_name:
+                self.converted_doc["priceListItem"].append({
+                    "item": item_name,
+                    "unit": item_price.get("uom"),
+                    "rate": item_price.get("price_list_rate"),
+                })
+
+    def _fill_missing_values_for_erpn(self):
+        """Convert FrappeBooks Price List to ERPNext format"""
+        self.converted_doc["enabled"] = 1
+        self.converted_doc["buying"] = self._dirty_doc.get("isPurchase", 0)
+        self.converted_doc["selling"] = self._dirty_doc.get("isSales", 0)
+        
+        price_list_items = self._dirty_doc.get("priceListItem", [])
+        if price_list_items:
+            self.converted_doc["items"] = []
+            for item in price_list_items:
+                item_code = frappe.db.get_value("Item", {"item_name": item.get("item")}, "item_code")
+                if item_code:
+                    self.converted_doc["items"].append({
+                        "item_code": item_code,
+                        "uom": item.get("unit"),
+                        "price_list_rate": item.get("rate"),
+                    })
 
 class ItemPrice(DocConverterBase):
     def __init__(self, instance, dirty_doc, target):

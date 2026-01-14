@@ -26,14 +26,15 @@ def get_pending_docs(instance):
         return {"success": True, "data": []}
 
     docs = []
+    processed_pricelists = set() 
     for queued_doc in queued_docs:
         doc = frappe.get_doc(
             queued_doc.document_type, queued_doc.document_name
-        )
+        )      
         existing_books_ref = frappe.db.get_value(
             "Books Reference",
             {
-                "document_type": queued_doc.doctype_name,
+                "document_type": queued_doc.document_type,
                 "document_name": queued_doc.document_name,
             },
             "books_name"
@@ -51,6 +52,28 @@ def get_pending_docs(instance):
         compatable_doc["books_sync_id"] = queued_doc.name
         if compatable_doc.get("doctype") == "Item":
             compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+        
+        if compatable_doc.get("doctype") == "PriceList":
+            pricelist_name = compatable_doc.get("name")
+            
+            if pricelist_name in processed_pricelists:
+                continue
+            
+            processed_pricelists.add(pricelist_name)
+            
+            if compatable_doc.get("priceListItem"):
+                seen_items = set()
+                unique_items = []
+                
+                for item in compatable_doc.get("priceListItem"):
+                    item_key = (item.get("item"), item.get("unit"))
+                    
+                    if item_key not in seen_items:
+                        seen_items.add(item_key)
+                        unique_items.append(item)
+                
+                compatable_doc["priceListItem"] = unique_items
+        
         docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
