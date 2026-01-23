@@ -1,91 +1,87 @@
 {
- "actions": [],
- "allow_rename": 1,
- "creation": "2024-11-13 10:04:33.120738",
- "doctype": "DocType",
- "engine": "InnoDB",
- "field_order": [
-  "enable_sync",
-  "item_tab",
-  "item_tax_template_map_section",
-  "sync_item_as_non_inventory",
-  "column_break_rsry",
-  "price_list",
-  "section_break_ppyl",
-  "tax_mapping",
-  "mode_of_payment_mapping"
- ],
- "fields": [
-  {
-   "default": "1",
-   "fieldname": "enable_sync",
-   "fieldtype": "Check",
-   "label": "Enable Sync"
-  },
-  {
-   "fieldname": "item_tax_template_map_section",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "tax_mapping",
-   "fieldtype": "Table",
-   "label": "Tax Mapping",
-   "options": "Books Tax Mapping"
-  },
-  {
-   "fieldname": "item_tab",
-   "fieldtype": "Tab Break",
-   "label": "Item"
-  },
-  {
-   "default": "1",
-   "fieldname": "sync_item_as_non_inventory",
-   "fieldtype": "Check",
-   "label": "Sync Items as Non-Inventory"
-  },
-  {
-   "fieldname": "column_break_rsry",
-   "fieldtype": "Column Break"
-  },
-  {
-   "default": "Standard Selling",
-   "fieldname": "price_list",
-   "fieldtype": "Link",
-   "label": "Price List",
-   "options": "Price List"
-  },
-  {
-   "fieldname": "section_break_ppyl",
-   "fieldtype": "Section Break"
-  },
-  {
-   "fieldname": "mode_of_payment_mapping",
-   "fieldtype": "Table",
-   "label": "Mode of Payment Mapping",
-   "options": "Books Payment Methods"
-  }
- ],
- "index_web_pages_for_search": 1,
- "issingle": 1,
- "links": [],
- "modified": "2025-05-13 10:43:48.875112",
- "modified_by": "Administrator",
- "module": "Books Integration",
- "name": "Books Sync Settings",
- "owner": "Administrator",
- "permissions": [
-  {
-   "create": 1,
-   "delete": 1,
-   "email": 1,
-   "print": 1,
-   "read": 1,
-   "role": "System Manager",
-   "share": 1,
-   "write": 1
-  }
- ],
- "sort_field": "modified",
- "sort_order": "DESC",
- "states": []
+    "actions": [],
+    "allow_rename": 1,
+    "creation": "2024-11-13 10:04:33.120738",
+    "doctype": "DocType",
+    "engine": "InnoDB",
+    "field_order": [
+        "enable_sync",
+        "item_tab",
+        "item_tax_template_map_section",
+        "sync_item_as_non_inventory",
+        "column_break_rsry",
+        "price_list",
+        "section_break_ppyl",
+        "tax_mapping",
+        "mode_of_payment_mapping"
+    ],
+    "fields": [{
+            "default": "1",
+            "fieldname": "enable_sync",
+            "fieldtype": "Check",
+            "label": "Enable Sync"
+        },
+        {
+            "fieldname": "item_tax_template_map_section",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "tax_mapping",
+            "fieldtype": "Table",
+            "label": "Tax Mapping",
+            "options": "Books Tax Mapping"
+        },
+        {
+            "fieldname": "item_tab",
+            "fieldtype": "Tab Break",
+            "label": "Item"
+        },
+        {
+            "default": "1",
+            "fieldname": "sync_item_as_non_inventory",
+            "fieldtype": "Check",
+            "label": "Sync Items as Non-Inventory"
+        },
+        {
+            "fieldname": "column_break_rsry",
+            "fieldtype": "Column Break"
+        },
+        {
+            "fieldname": "price_list",
+            "fieldtype": "Link",
+            "label": "Price List",
+            "options": "Price List"
+        },
+        {
+            "fieldname": "section_break_ppyl",
+            "fieldtype": "Section Break"
+        },
+        {
+            "fieldname": "mode_of_payment_mapping",
+            "fieldtype": "Table",
+            "label": "Mode of Payment Mapping",
+            "options": "Books Payment Methods"
+        }
+    ],
+    "index_web_pages_for_search": 1,
+    "issingle": 1,
+    "links": [],
+    "modified": "2025-05-13 10:43:48.875112",
+    "modified_by": "Administrator",
+    "module": "Books Integration",
+    "name": "Books Sync Settings",
+    "owner": "Administrator",
+    "permissions": [{
+        "create": 1,
+        "delete": 1,
+        "email": 1,
+        "print": 1,
+        "read": 1,
+        "role": "System Manager",
+        "share": 1,
+        "write": 1
+    }],
+    "sort_field": "modified",
+    "sort_order": "DESC",
+    "states": []
 }

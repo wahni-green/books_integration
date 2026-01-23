@@ -2,7 +2,7 @@
 # For license information, please see license.txt
 
 import frappe
-from frappe.utils import create_batch, today
+from frappe.utils import create_batch, today, strip_html_tags
 from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
 from frappe.query_builder.functions import IfNull, Max
@@ -93,6 +93,18 @@ def get_pending_docs(instance, doctype=None, all_docs=False):
                 message=frappe.get_traceback(),
             )
             continue
+        compatable_doc = doc_converter_obj.get_converted_doc()
+
+        if compatable_doc.get("description"):
+            compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
+
+        if existing_books_ref:
+            compatable_doc["fbooksDocName"] = existing_books_ref
+
+        compatable_doc["books_sync_id"] = queued_doc.name
+        if compatable_doc.get("doctype") == "Item":
+            compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+        docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
 
