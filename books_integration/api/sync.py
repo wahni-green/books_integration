@@ -9,52 +9,92 @@ from frappe.query_builder.functions import IfNull, Max
 
 
 @frappe.whitelist(methods=["GET"])
-def get_pending_docs(instance):
+def get_pending_docs(instance, doctype=None, all_docs=False):
     item_rates = get_item_rates()
     if not item_rates:
         return {
             "success": False,
             "message": "price list not selected in Books Sync Settings"
         }
+    
+    filters = {"books_instance": instance}
+    
+    if doctype and not all_docs:
+        filters["document_type"] = doctype
+    
     queued_docs = frappe.db.get_all(
         "Books Sync Queue",
-        filters={"books_instance": instance},
+        filters=filters,
         fields=["name", "document_type", "document_name", "books_instance"]
     )
 
     if not queued_docs:
         return {"success": True, "data": []}
 
+    if all_docs:
+        dependency_order = [
+            "UOM",
+            "Price List", 
+            "Item Group",
+            "Party",
+            "Address", 
+            "Batch",
+            "Item",
+            "Pricing Rule"
+        ]
+        
+        docs_by_type = {}
+        for doc in queued_docs:
+            docs_by_type.setdefault(doc.document_type, []).append(doc)
+        
+        ordered_docs = []
+        for doc_type in dependency_order:
+            if doc_type in docs_by_type:
+                ordered_docs.extend(docs_by_type[doc_type])
+        
+        for doc_type, docs in docs_by_type.items():
+            if doc_type not in dependency_order:
+                ordered_docs.extend(docs)
+        
+        queued_docs = ordered_docs
+
     docs = []
     for queued_doc in queued_docs:
-        doc = frappe.get_doc(
-            queued_doc.document_type, queued_doc.document_name
-        )
-        existing_books_ref = frappe.db.get_value(
-            "Books Reference",
-            {
-                "document_type": queued_doc.doctype_name,
-                "document_name": queued_doc.document_name,
-            },
-            "books_name"
-        )
-        doc_converter_obj = init_doc_converter(
-            queued_doc.books_instance, doc, "fbooks"
-        )
-        if not doc_converter_obj:
+        try:
+            doc = frappe.get_doc(
+                queued_doc.document_type, queued_doc.document_name
+            )
+            existing_books_ref = frappe.db.get_value(
+                "Books Reference",
+                {
+                    "document_type": queued_doc.document_type,
+                    "document_name": queued_doc.document_name,
+                    "books_instance": instance,
+                },
+                "books_name"
+            )
+            doc_converter_obj = init_doc_converter(
+                queued_doc.books_instance, doc, "fbooks"
+            )
+            if not doc_converter_obj:
+                continue
+            compatable_doc = doc_converter_obj.get_converted_doc()
+
+            if existing_books_ref:
+                compatable_doc["fbooksDocName"] = existing_books_ref
+
+            compatable_doc["books_sync_id"] = queued_doc.name
+            if compatable_doc.get("doctype") == "Item":
+                compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+            docs.append(compatable_doc)
+        except Exception as e:
+            frappe.log_error(
+                title=f"Books Integration Error - Processing {queued_doc.document_type} {queued_doc.document_name}",
+                message=frappe.get_traceback(),
+            )
             continue
-        compatable_doc = doc_converter_obj.get_converted_doc()
-
-        if existing_books_ref:
-            compatable_doc["fbooksDocName"] = existing_books_ref
-
-        compatable_doc["books_sync_id"] = queued_doc.name
-        if compatable_doc.get("doctype") == "Item":
-            compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
-        docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
-
 
 @frappe.whitelist(methods=["POST"])
 def initiate_master_sync(instance, records):
