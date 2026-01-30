@@ -1,11 +1,43 @@
 # Copyright (c) 2024, Wahni IT Solutions and contributors
 # For license information, please see license.txt
 
-# import frappe
+import frappe
 from frappe.model.document import Document
 
 
 class BooksSyncSettings(Document):
+	def validate(self):
+		if self.price_list:
+			return
+
+		if frappe.db.exists("Price List", "Standard Selling"):
+			self.price_list = "Standard Selling"
+			return
+
+		price_list = frappe.db.get_value(
+			"Price List",
+			{"selling": 1, "enabled": 1},
+			"name"
+		)
+
+		if price_list:
+			self.price_list = price_list
+			return
+
+		self.price_list = self.create_default_price_list()
+
+	def create_default_price_list(self):
+		pl = frappe.get_doc({
+			"doctype": "Price List",
+			"price_list_name": "Standard Selling",
+			"selling": 1,
+			"buying": 0,
+			"currency": frappe.db.get_default("currency") or "USD",
+			"enabled": 1
+		})
+		pl.insert(ignore_permissions=True)
+		return pl.name
+
 	def generate_sync_params(self):
 		data = self.as_dict()
 

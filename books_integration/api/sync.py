@@ -89,7 +89,13 @@ def get_pending_docs(instance, doctype=None, all_docs=False):
             compatable_doc["books_sync_id"] = queued_doc.name
             if compatable_doc.get("doctype") == "Item":
                 compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+        
+            if compatable_doc.get("description"):
+                compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
 
+            if existing_books_ref:
+                compatable_doc["fbooksDocName"] = existing_books_ref
+            
             if compatable_doc.get("doctype") == "PriceList":
                 pricelist_name = compatable_doc.get("name")
 
