@@ -7,56 +7,201 @@ from books_integration.doc_converter import init_doc_converter
 from books_integration.utils import get_doctype_name, update_books_reference, pretty_json
 from frappe.query_builder.functions import IfNull, Max
 
+syncable_doc_types = [
+    "Item Group",
+    "UOM",
+    "Batch",
+    "Item",
+    "Price List",
+    "Pricing Rule",
+]
+
 
 @frappe.whitelist(methods=["GET"])
-def get_pending_docs(instance):
+def get_pending_docs(instance, doctype=None, all_docs=False):
     item_rates = get_item_rates()
     if not item_rates:
         return {
             "success": False,
             "message": "price list not selected in Books Sync Settings"
         }
+
+    if all_docs:
+        return get_all_docs_for_initial_sync(instance, item_rates)
+
+    filters = {"books_instance": instance}
+    if doctype:
+        filters["document_type"] = doctype
+
     queued_docs = frappe.db.get_all(
         "Books Sync Queue",
-        filters={"books_instance": instance},
+        filters=filters,
         fields=["name", "document_type", "document_name", "books_instance"]
     )
 
     if not queued_docs:
         return {"success": True, "data": []}
 
+    docs_by_type = {}
+    for doc in queued_docs:
+        docs_by_type.setdefault(doc.document_type, []).append(doc)
+
+    ordered_docs = []
+    for doc_type in syncable_doc_types:
+        if doc_type in docs_by_type:
+            ordered_docs.extend(docs_by_type[doc_type])
+
+    for doc_type, docs in docs_by_type.items():
+        if doc_type not in syncable_doc_types:
+            ordered_docs.extend(docs)
+
+    queued_docs = ordered_docs
+
     docs = []
+    processed_pricelists = set()
     for queued_doc in queued_docs:
-        doc = frappe.get_doc(
-            queued_doc.document_type, queued_doc.document_name
-        )
-        existing_books_ref = frappe.db.get_value(
-            "Books Reference",
-            {
-                "document_type": queued_doc.doctype_name,
-                "document_name": queued_doc.document_name,
-            },
-            "books_name"
-        )
-        doc_converter_obj = init_doc_converter(
-            queued_doc.books_instance, doc, "fbooks"
-        )
-        if not doc_converter_obj:
+        try:
+            doc = frappe.get_doc(
+                queued_doc.document_type, queued_doc.document_name
+            )
+            existing_books_ref = frappe.db.get_value(
+                "Books Reference",
+                {
+                    "document_type": queued_doc.document_type,
+                    "document_name": queued_doc.document_name,
+                    "books_instance": instance,
+                },
+                "books_name"
+            )
+            doc_converter_obj = init_doc_converter(
+                queued_doc.books_instance, doc, "fbooks"
+            )
+            if not doc_converter_obj:
+                continue
+            compatable_doc = doc_converter_obj.get_converted_doc()
+
+            if compatable_doc.get("description"):
+                compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
+
+            if existing_books_ref:
+                compatable_doc["fbooksDocName"] = existing_books_ref
+
+            compatable_doc["books_sync_id"] = queued_doc.name
+            if compatable_doc.get("doctype") == "Item":
+                compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+        
+            if compatable_doc.get("description"):
+                compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
+
+            if existing_books_ref:
+                compatable_doc["fbooksDocName"] = existing_books_ref
+            
+            if compatable_doc.get("doctype") == "PriceList":
+                pricelist_name = compatable_doc.get("name")
+
+                if pricelist_name in processed_pricelists:
+                    continue
+
+                processed_pricelists.add(pricelist_name)
+                
+                if compatable_doc.get("priceListItem"):
+                    seen_items = set()
+                    unique_items = []
+
+                    for item in compatable_doc.get("priceListItem"):
+                        item_key = (item.get("item"), item.get("unit"))
+
+                        if item_key not in seen_items:
+                            seen_items.add(item_key)
+                            unique_items.append(item)
+
+                    compatable_doc["priceListItem"] = unique_items
+
+            docs.append(compatable_doc)
+        except Exception as e:
+            frappe.log_error(
+                title=f"Books Integration Error - Processing {queued_doc.document_type} {queued_doc.document_name}",
+                message=frappe.get_traceback(),
+            )
             continue
-        compatable_doc = doc_converter_obj.get_converted_doc()
-
-        if compatable_doc.get("description"):
-            compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
-
-        if existing_books_ref:
-            compatable_doc["fbooksDocName"] = existing_books_ref
-
-        compatable_doc["books_sync_id"] = queued_doc.name
-        if compatable_doc.get("doctype") == "Item":
-            compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
-        docs.append(compatable_doc)
 
     return {"success": True, "data": docs}
+
+
+def get_all_docs_for_initial_sync(instance, item_rates):
+    all_docs = []
+
+    for doctype in syncable_doc_types:
+        try:
+            if doctype == "Party":
+                for party_type in ["Customer", "Supplier"]:
+                    all_docs.extend(
+                        fetch_docs_by_type(party_type, instance, item_rates)
+                    )
+            else:
+                all_docs.extend(
+                    fetch_docs_by_type(doctype, instance, item_rates)
+                )
+        except Exception:
+            frappe.log_error(
+                title=f"Books Integration Error - Fetching {doctype} (Initial Sync)",
+                message=frappe.get_traceback(),
+            )
+            continue
+
+    return {"success": True, "data": all_docs}
+
+
+def fetch_docs_by_type(doctype, instance, item_rates):
+    docs = []
+
+    try:
+        doc_names = frappe.get_all(doctype, pluck='name')
+        for doc_name in doc_names:
+            try:
+                doc = frappe.get_doc(doctype, doc_name)
+                existing_books_ref = frappe.db.get_value(
+                    "Books Reference",
+                    {
+                        "document_type": doctype,
+                        "document_name": doc_name,
+                        "books_instance": instance,
+                    },
+                    "books_name"
+                )
+
+                doc_converter_obj = init_doc_converter(instance, doc, "fbooks")
+                if not doc_converter_obj:
+                    continue
+
+                compatable_doc = doc_converter_obj.get_converted_doc()
+                if compatable_doc.get("description"):
+                    compatable_doc["description"] = strip_html_tags(compatable_doc["description"])
+
+                if existing_books_ref:
+                    compatable_doc["fbooksDocName"] = existing_books_ref
+
+                compatable_doc["books_sync_id"] = None 
+
+                if compatable_doc.get("doctype") == "Item":
+                    compatable_doc["rate"] = item_rates.get(compatable_doc.get("itemCode"), 0)
+
+                docs.append(compatable_doc)
+
+            except Exception as e:
+                frappe.log_error(
+                    title=f"Books Integration Error - Processing {doctype} {doc_name} (Initial Sync)",
+                    message=frappe.get_traceback(),
+                )
+                continue
+
+    except Exception as e:
+        frappe.log_error(
+            title=f"Books Integration Error - Fetching {doctype} list (Initial Sync)",
+            message=frappe.get_traceback(),
+        )
+
+    return docs
 
 
 @frappe.whitelist(methods=["POST"])

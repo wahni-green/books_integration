@@ -99,6 +99,25 @@ def add_item(doc, method=None):
             }
             ).insert()
 
+        if doc.price_list:
+            is_pricelist_exists = frappe.db.exists(
+                {
+                    "doctype": "Books Sync Queue",
+                    "document_name": doc.price_list,
+                    "document_type": "Price List",
+                    "books_instance": instance,
+                }
+            )
+            if not is_pricelist_exists:
+                frappe.get_doc(
+                    {
+                        "doctype": "Books Sync Queue",
+                        "document_name": doc.price_list,
+                        "document_type": "Price List",
+                        "books_instance": instance,
+                    }
+                ).insert()
+
 def sync_existing_items(instance):
     all_items = frappe.db.get_all("Item")
     for item in all_items:
