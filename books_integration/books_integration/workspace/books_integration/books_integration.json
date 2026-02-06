@@ -1,0 +1,99 @@
+{
+ "charts": [],
+ "content": "[{\"id\":\"CuDoqbUqnI\",\"type\":\"header\",\"data\":{\"text\":\"<span class=\\\"h4\\\"><b>Books Integration</b></span>\",\"col\":12}},{\"id\":\"62hseENHbd\",\"type\":\"spacer\",\"data\":{\"col\":12}},{\"id\":\"HQB180omc5\",\"type\":\"card\",\"data\":{\"card_name\":\"Books Sync Settings\",\"col\":4}},{\"id\":\"TQjtsikjrO\",\"type\":\"card\",\"data\":{\"card_name\":\"Error Log List\",\"col\":4}}]",
+ "creation": "2026-02-06 15:45:40.536210",
+ "custom_blocks": [],
+ "docstatus": 0,
+ "doctype": "Workspace",
+ "for_user": "",
+ "hide_custom": 0,
+ "icon": "tool",
+ "idx": 1,
+ "indicator_color": "green",
+ "is_hidden": 0,
+ "label": "Books Integration",
+ "links": [
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Error Log List",
+   "link_count": 1,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Error Log",
+   "link_count": 0,
+   "link_to": "Books Error Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Sync Settings",
+   "link_count": 4,
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Card Break"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Instance",
+   "link_count": 0,
+   "link_to": "Books Instance",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Sync Queue",
+   "link_count": 0,
+   "link_to": "Books Sync Queue",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Sync Settings",
+   "link_count": 0,
+   "link_to": "Books Sync Settings",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  },
+  {
+   "hidden": 0,
+   "is_query_report": 0,
+   "label": "Books Integration Log",
+   "link_count": 0,
+   "link_to": "Books Integration Log",
+   "link_type": "DocType",
+   "onboard": 0,
+   "type": "Link"
+  }
+ ],
+ "modified": "2026-02-06 16:20:54.438510",
+ "modified_by": "Administrator",
+ "module": "Books Integration",
+ "name": "Books Integration",
+ "number_cards": [],
+ "owner": "Administrator",
+ "parent_page": "",
+ "public": 1,
+ "quick_lists": [],
+ "restrict_to_domain": "",
+ "roles": [],
+ "sequence_id": 27.1,
+ "shortcuts": [],
+ "title": "Books Integration"
+}
